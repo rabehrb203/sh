@@ -1,0 +1,91 @@
+{% extends 'sales_app/base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container mt-4" id="statement-content">
+    <!-- Actions Bar -->
+    <div class="d-flex justify-content-end mb-3 no-print">
+        <a href="#" class="btn btn-primary ms-2" onclick="printStatement()">
+            <i class="fas fa-print"></i> طباعة كشف الحساب
+        </a>
+        <a href="{% url 'sales_app:customer_detail' customer.id %}" class="btn btn-outline-secondary">
+            <i class="fas fa-arrow-right"></i> عودة للتفاصيل
+        </a>
+    </div>
+
+    <!-- Customer Information -->
+    <div class="card mb-4">
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0">كشف حساب - {{ customer.name }}</h5>
+        </div>
+        <div class="card-body">
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <!-- <p><strong>رقم الزبون:</strong> #{{ customer.id }}</p> -->
+                    <!-- <p><strong>البريد الإلكتروني:</strong> {{ customer.email|default:"غير متوفر" }}</p> -->
+                    <!-- <p><strong>رقم الهاتف:</strong> {{ customer.phone|default:"غير متوفر" }}</p> -->
+                </div>
+                <div class="col-md-6 text-md-end">
+                    <!-- <p><strong>تاريخ الكشف:</strong> {% now "Y-m-d" %}</p> -->
+                    <!-- <p><strong>الرصيد النهائي:</strong> {{ final_balance|floatformat:2 }} ₪</p> -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Transactions Table -->
+    <div class="card">
+        <div class="card-body">
+            {% if transactions %}
+            <div class="table-responsive">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>التاريخ</th>
+                            <th>نوع المعاملة</th>
+                            <th>المرجع</th>
+                            <th>مدين</th>
+                            <th>دائن</th>
+                            <th>الرصيد</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for transaction in transactions %}
+                        <tr>
+                            <!-- <td>{{ transaction.date|date:"Y-m-d" }}</td> -->
+                            <!-- <td>{{ transaction.type }}</td>
+                            <td>{{ transaction.reference }}</td>
+                            <td>{{ transaction.debit|floatformat:2 }} ₪</td>
+                            <td>{{ transaction.credit|floatformat:2 }} ₪</td>
+                            <td>{{ transaction.balance|floatformat:2 }} ₪</td> -->
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <p class="text-center text-muted my-4">لا توجد معاملات لهذا الزبون</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<script>
+function printStatement() {
+    var printWindow = window.open('about:blank', '_blank');
+    printWindow.document.write('<html><head><title>كشف الحساب</title>');
+    printWindow.document.write('<style>body { color: #3498db; font-family: Arial, sans-serif; } table { width: 100%; border-collapse: collapse; } th, td { border: 1px solid #3498db; padding: 8px; }</style>');
+    printWindow.document.write('</head><body>');
+    printWindow.document.write('<h1>كشف الحساب - ' + '{{ customer.name|escapejs }}' + '</h1>');
+    printWindow.document.write('<p>رقم العميل: ' + '{{ customer.id }}' + '</p>');
+    printWindow.document.write('<p>تاريخ الكشف: ' + new Date().toLocaleDateString() + '</p>');
+    printWindow.document.write('<table><thead><tr><th>التسلسل</th><th>رقم الفاتورة</th><th>تاريخ الفاتورة</th><th>المبلغ</th><th>الحالة</th></tr></thead><tbody>');
+    printWindow.document.write('{% for transaction in transactions %}<tr><td>' + '{{ forloop.counter }}' + '</td><td>' + '{{ transaction.reference|escapejs }}' + '</td><td>' + '{{ transaction.date|date:"Y-m-d"|escapejs }}' + '</td><td>' + '{{ transaction.debit|floatformat:2|escapejs }} ₪' + '</td><td>' + '{{ transaction.status|escapejs }}' + '</td></tr>{% endfor %}');
+    printWindow.document.write('</tbody></table>');
+    printWindow.document.write('</body></html>');
+    printWindow.document.close();
+    printWindow.print();
+}
+</script>
+
+{% endblock %}

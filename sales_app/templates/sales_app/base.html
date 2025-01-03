@@ -1,0 +1,188 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html dir="rtl" lang="ar">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}نظام المبيعات{% endblock %}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.rtl.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+    
+    <style>
+        @font-face {
+            font-family: 'Cairo';
+            src: url("{% static 'fonts/cairo.ttf' %}") format('truetype');
+            font-weight: normal;
+            font-style: normal;
+        }
+        body {
+            font-family: 'Cairo', sans-serif;
+            background-color: #f8f9fa;
+        }
+        
+        #sidebar {
+            min-height: 100vh;
+            background: #2c3e50;
+            color: white;
+            width: 250px;
+            position: fixed;
+            right: 0;
+            top: 0;
+            z-index: 1000;
+            padding: 20px;
+            transition: all 0.3s;
+        }
+        
+        #content {
+            margin-right: 250px;
+            padding: 20px;
+            transition: all 0.3s;
+        }
+        
+        .sidebar-header {
+            padding: 20px 0;
+            text-align: center;
+            border-bottom: 1px solid #34495e;
+        }
+        
+        .sidebar-header h3 {
+            color: #ecf0f1;
+            margin: 0;
+            font-size: 1.5rem;
+        }
+        
+        .sidebar-link {
+            display: block;
+            color: #ecf0f1;
+            padding: 10px 15px;
+            text-decoration: none;
+            border-radius: 5px;
+            margin: 5px 0;
+            transition: all 0.3s;
+        }
+        
+        .sidebar-link:hover, .sidebar-link.active {
+            background: #34495e;
+            color: #fff;
+        }
+        
+        .sidebar-icon {
+            margin-left: 10px;
+            width: 20px;
+            text-align: center;
+        }
+        
+        .card {
+            border-radius: 10px;
+            box-shadow: 0 0 15px rgba(0,0,0,0.1);
+            border: none;
+        }
+        
+        .card-header {
+            background-color: #fff;
+            border-bottom: 2px solid #f8f9fa;
+            padding: 15px 20px;
+        }
+        
+        .btn-primary {
+            background-color: #3498db;
+            border-color: #3498db;
+        }
+        
+        .btn-primary:hover {
+            background-color: #2980b9;
+            border-color: #2980b9;
+        }
+        
+        .table th {
+            font-weight: 600;
+            background-color: #f8f9fa;
+        }
+        
+        @media (max-width: 768px) {
+            #sidebar {
+                margin-right: -250px;
+            }
+            #sidebar.active {
+                margin-right: 0;
+            }
+            #content {
+                margin-right: 0;
+            }
+            #content.active {
+                margin-right: 250px;
+            }
+        }
+    </style>
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <div id="sidebar">
+        <div class="sidebar-header">
+            <h3>نظام المبيعات</h3>
+        </div>
+        <nav class="mt-4">
+            <a href="{% url 'sales_app:dashboard' %}" class="sidebar-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">
+                <i class="fas fa-chart-line sidebar-icon"></i>
+                لوحة التحكم
+            </a>
+            <a href="{% url 'sales_app:customer_list' %}" class="sidebar-link {% if 'customer' in request.resolver_match.url_name %}active{% endif %}">
+                <i class="fas fa-users sidebar-icon"></i>
+                الزبائن
+            </a>
+            <a href="{% url 'sales_app:product_list' %}" class="sidebar-link {% if 'product' in request.resolver_match.url_name %}active{% endif %}">
+                <i class="fas fa-box sidebar-icon"></i>
+                المنتجات
+            </a>
+            <a href="{% url 'sales_app:invoice_list' %}" class="sidebar-link {% if 'invoice' in request.resolver_match.url_name %}active{% endif %}">
+                <i class="fas fa-file-invoice-dollar sidebar-icon"></i>
+                الفواتير
+            </a>
+            <a href="{% url 'sales_app:receivable_list' %}" class="sidebar-link {% if 'receivable' in request.resolver_match.url_name %}active{% endif %}">
+                <i class="fas fa-file-invoice sidebar-icon"></i>
+                سندات القبض
+            </a>
+            <hr class="my-2">
+            <a href="{% url 'sales_app:company_info' %}" class="sidebar-link {% if request.resolver_match.url_name == 'company_info' %}active{% endif %}">
+                <i class="fas fa-building sidebar-icon"></i>
+                معلومات المستفيد
+            </a>
+            <a href="{% url 'sales_app:invoice_settings' %}" class="sidebar-link {% if request.resolver_match.url_name == 'invoice_settings' %}active{% endif %}">
+                <i class="fas fa-cog sidebar-icon"></i>
+                الإعدادات
+            </a>
+        </nav>
+    </div>
+
+    <div id="content">
+        {% if messages %}
+        <div class="messages">
+            {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+        
+        {% block content %}{% endblock %}
+    </div>
+
+    <!-- Bootstrap Bundle with Popper -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- jQuery -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    
+    <script>
+        $(document).ready(function() {
+            $('#sidebarCollapse').on('click', function() {
+                $('#sidebar, #content').toggleClass('active');
+            });
+        });
+    </script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

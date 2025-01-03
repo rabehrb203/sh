@@ -1,0 +1,244 @@
+{% extends 'sales_app/base_print.html' %}
+{% load static %}
+
+{% block title %}تقرير المبيعات{% endblock %}
+
+{% block extra_css %}
+<style>
+    @font-face {
+        font-family: 'Cairo';
+        src: url('{% static "fonts/cairo.ttf" %}') format('truetype');
+        font-weight: normal;
+        font-style: normal;
+    }
+
+    @media print {
+        @page {
+            size: A4;
+            margin: 0;
+        }
+        body {
+            margin: 1cm;
+        }
+        .no-print {
+            display: none !important;
+        }
+    }
+
+    body {
+        font-family: 'Cairo', sans-serif;
+        line-height: 1.6;
+        color: #2c3e50;
+        background-color: #fff;
+    }
+
+    .report-container {
+        max-width: 21cm;
+        margin: 0 auto;
+        padding: 1.5rem;
+        position: relative;
+        min-height: 27cm;
+        box-sizing: border-box;
+    }
+
+    .report-header {
+        text-align: center;
+        margin-bottom: 2rem;
+    }
+
+    .report-title {
+        font-size: 1.5rem;
+        font-weight: bold;
+        color: #2c3e50;
+        margin-bottom: 0.5rem;
+    }
+
+    .report-date {
+        font-size: 0.9rem;
+        color: #666;
+        margin-bottom: 1rem;
+    }
+
+    .filter-form {
+        background-color: #f8f9fa;
+        padding: 1rem;
+        border-radius: 5px;
+        margin-bottom: 1.5rem;
+    }
+
+    .summary-cards {
+        display: flex;
+        justify-content: space-evenly;
+        margin-bottom: 1.5rem;
+    }
+
+    .summary-card {
+        background-color: #fff;
+        border: 1px solid #e0e0e0;
+        border-radius: 5px;
+        padding: 1rem;
+        width: 23%;
+        text-align: center;
+    }
+
+    .summary-card h5 {
+        font-size: 0.9rem;
+        color: #666;
+        margin-bottom: 0.5rem;
+    }
+
+    .summary-card p {
+        font-size: 1.1rem;
+        font-weight: bold;
+        color: #2c3e50;
+        margin: 0;
+    }
+
+    .items-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-bottom: 1.5rem;
+    }
+
+    .items-table th {
+        background-color: #3498db;
+        color: white;
+        padding: 0.5rem;
+        text-align: right;
+    }
+
+    .items-table td {
+        padding: 0.4rem;
+        border-bottom: 1px solid #e0e0e0;
+    }
+
+    .items-table tfoot td {
+        font-weight: bold;
+        background-color: #f8f9fa;
+    }
+
+    .pagination {
+        display: flex;
+        justify-content: center;
+        margin-top: 1rem;
+    }
+
+    .pagination .page-link {
+        color: #3498db;
+    }
+
+    .pagination .active .page-link {
+        background-color: #3498db;
+        border-color: #3498db;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="report-container">
+    <div class="report-header">
+        <h1 class="report-title">تقرير المبيعات</h1>
+        <p class="report-date">تاريخ التقرير: {{ report_date }}</p>
+    </div>
+
+    <div class="no-print filter-form">
+        <form method="get" class="row g-3 align-items-end">
+            <div class="col-md-4">
+                <label for="start_date" class="form-label">من تاريخ</label>
+                <input type="date" class="form-control" id="start_date" name="start_date" value="{{ start_date }}">
+            </div>
+            <div class="col-md-4">
+                <label for="end_date" class="form-label">إلى تاريخ</label>
+                <input type="date" class="form-control" id="end_date" name="end_date" value="{{ end_date }}">
+            </div>
+            <div class="col-md-4">
+                <button type="submit" class="btn btn-primary w-100">تطبيق الفلتر</button>
+            </div>
+        </form>
+    </div>
+
+    <div class="no-print mb-3">
+        <button onclick="window.print()" class="btn btn-primary">
+            طباعة التقرير
+        </button>
+    </div>
+
+    <div class="summary-cards">
+        <div class="summary-card">
+            <h5>إجمالي الكمية</h5>
+            <p>{{ total_quantity }}</p>
+        </div>
+        <div class="summary-card">
+            <h5>إجمالي المبيعات</h5>
+            <p>{{ total_sales }}</p>
+        </div>
+        <div class="summary-card">
+            <h5>إجمالي المدفوعات</h5>
+            <p>{{ total_payments }}</p>
+        </div>
+    
+    </div>
+
+    <table class="items-table">
+        <thead>
+            <tr>
+                <th>#</th>
+                <th>التاريخ</th>
+                <th>الزبون</th>
+                <th>المنتج</th>
+                <th>الكمية</th>
+                <th>السعر</th>
+                <th>الإجمالي</th>
+                <th>حالة الدفع</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for sale in sales %}
+            <tr>
+                <td>{{ sale.invoice_number }}</td>
+                <td>{{ sale.date|date:"Y-m-d" }}</td>
+                <td>{{ sale.customer }}</td>
+                <td>{{ sale.product }}</td>
+                <td>{{ sale.quantity }}</td>
+                <td>{{ sale.price }}</td>
+                <td>{{ sale.total }}</td>
+                <td>{{ sale.payment_status }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+        <tfoot>
+            <tr>
+                <td colspan="4" class="text-start">الإجمالي</td>
+                <td>{{ total_quantity }}</td>
+                <td></td>
+                <td>{{ total_sales }}</td>
+                <td></td>
+            </tr>
+        </tfoot>
+    </table>
+
+    {% if sales.has_other_pages %}
+    <nav class="no-print">
+        <ul class="pagination justify-content-center">
+            {% if sales.has_previous %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ sales.previous_page_number }}&start_date={{ start_date }}&end_date={{ end_date }}">السابق</a>
+            </li>
+            {% endif %}
+
+            {% for num in sales.paginator.page_range %}
+            <li class="page-item {% if sales.number == num %}active{% endif %}">
+                <a class="page-link" href="?page={{ num }}&start_date={{ start_date }}&end_date={{ end_date }}">{{ num }}</a>
+            </li>
+            {% endfor %}
+
+            {% if sales.has_next %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ sales.next_page_number }}&start_date={{ start_date }}&end_date={{ end_date }}">التالي</a>
+            </li>
+            {% endif %}
+        </ul>
+    </nav>
+    {% endif %}
+</div>
+{% endblock %}

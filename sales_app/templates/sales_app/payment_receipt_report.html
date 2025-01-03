@@ -1,0 +1,337 @@
+{% extends 'sales_app/base.html' %}
+{% load static %}
+
+{% block title %}تقرير سندات القبض{% endblock %}
+
+{% block content %}
+<style>
+    @media print {
+        .no-print {
+            display: none !important;
+        }
+        .print-header {
+            display: flex   !important;
+        }
+    }
+    .print-header {
+        display: none;
+        text-align: center;
+        margin-bottom: 20px;
+    }
+    .report-left {
+        flex: 1;
+        display: flex;
+        text-align: left;
+        justify-content: flex-end;
+        margin-left: 25px;
+    }
+    .report-center {
+        display: flex;
+        flex: 1;
+        text-align: center;
+        align-items: center;
+        justify-content: center;
+        flex-direction: column;
+    }
+    .report-right {
+        flex: 1;
+        display: flex;
+        text-align: left;
+        align-items: flex-start;
+        justify-content:  flex-start;
+        flex-direction: column;
+        margin-right: 25px;
+        margin-top: 5px;
+    }
+    .company-logo {
+        max-width: 120px;
+        height: auto;
+        margin-bottom: 10px;
+    }
+    .report-title {
+        font-size: 24px;
+        font-weight: bold;
+        margin: 10px 0;
+    }
+    .report-info {
+        font-size: 14px;
+    }
+    .report-date {
+        margin: 5px 0;
+        font-size: 14px;
+    }
+    .filter-summary {
+        font-size: 14px;
+        color: #666;
+    }
+    .table-header th {
+        text-align: center;
+        background-color: #3498db;
+        color: #fff;
+        font-weight: bold;
+        border: 1px solid #3498db;
+    }
+    .table-footer td {
+        text-align: center;
+        background-color: #3498db;
+        color: #fff;
+        font-weight: bold;
+        border: 1px solid #3498db;
+    }
+    td {
+        border: none;
+        text-align: center;
+    }
+    .report-right p {
+        text-align: right;
+        margin-bottom: 20px;
+    }
+    .card {
+            border: none !important;
+            width: 100% !important;
+            box-shadow: none !important;
+    }
+    @media print {
+        @page {
+            size: A4 portrait;
+            margin: 0;
+        }
+     
+        body {
+            margin: 0;
+            padding: 15px;
+            width: 100%;
+            height: 100%;
+            background-color: #fff;
+        }
+        html {
+            width: 100%;
+            height: 100%;
+            background-color: #fff;
+        }
+        .container-fluid {
+            width: 100%;
+            margin: 0 auto;
+            padding: 0;
+        }
+        .card {
+            border: none !important;
+            width: 100% !important;
+            box-shadow: none !important;
+        }
+        .card-header {
+            border: none !important;
+            display: none !important;
+            background-color: #fff !important;
+            color: #000 !important;
+            text-align: center;
+        }
+        #content {
+            margin: 0;
+            padding: 10px;
+        }
+        .card-title {
+            font-size: 20px;
+            font-weight: bold;
+            text-align: center;
+        }
+
+        .btn, .form-group, nav, .pagination, #sidebar, #sidebarCollapse {
+            display: none !important;
+        }
+        table {
+            width: 100% !important;
+            border-collapse: collapse !important;
+            font-size: 12px;
+        }
+    
+        .table-header th {
+        text-align: center;
+        background-color: #3498db;
+        color: #fff;
+        font-weight: bold;
+        border: 1px solid #3498db;
+    }
+   
+    .table-footer td {
+        text-align: center;
+        background-color: #3498db;
+        color: #fff;
+        font-weight: bold;
+        border: 1px solid #3498db;
+    }
+
+    td {
+        border: none;
+        text-align: center;
+    }
+    }
+</style>
+
+<div class="container-fluid">
+    <!-- رأس التقرير للطباعة -->
+    <div class="print-header">
+        <div class="report-right">
+            <div class="report-date">
+                <p>تاريخ التقرير: {% now "Y-m-d" %}</p>
+                {% if request.GET.start_date and request.GET.end_date %}
+                    <p>الفترة: من {{ request.GET.start_date }} إلى {{ request.GET.end_date }}</p>
+                {% endif %}
+            </div>
+           
+        </div>
+        
+        <div class="report-center">
+        <h1 class="report-title">تقرير سندات القبض</h1>
+        <div class="filter-summary">
+            {% if request.GET.customer %}
+                {% for customer in customers %}
+                    {% if customer.id|stringformat:"s" == request.GET.customer %}
+                        <p id="customerName">{{ customer.name }}</p>
+                    {% endif %}
+                {% endfor %}
+            {% else %}
+                <p id="customerName">جميع الزبائن</p>
+            {% endif %}
+        </div>
+        </div>
+        <div class="report-left">
+            <img src="{% static 'images/logo.png' %}" alt="شعار الشركة" class="company-logo">
+
+        </div>
+     
+      
+    </div>
+    
+    <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center" style="color: #3498db;">
+            <h3 class="card-title mb-0">تقرير سندات القبض</h3>
+            <div>
+                <button onclick="window.print()" class="btn btn-light no-print bg-primary text-white">
+                    <i class="fas fa-print"></i> طباعة
+                </button>
+            </div>
+        </div>
+        <div class="card-body">
+            <!-- فلاتر البحث -->
+            <form method="get" class="mb-4 no-print">
+                <div class="row">
+                    <div class="col-md-3">
+                        <div class="form-group">
+                            <label for="start_date">من تاريخ</label>
+                            <input type="date" name="start_date" id="start_date" class="form-control" 
+                                   value="{{ request.GET.start_date }}">
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="form-group">
+                            <label for="end_date">إلى تاريخ</label>
+                            <input type="date" name="end_date" id="end_date" class="form-control" 
+                                   value="{{ request.GET.end_date }}">
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="form-group">
+                            <label for="customer">الزبون</label>
+                            <select name="customer" id="customer" class="form-control" onchange="updateCustomerName(this)">
+                                <option value="">الكل</option>
+                                {% for customer in customers %}
+                                <option value="{{ customer.id }}" {% if request.GET.customer|add:"0" == customer.id %}selected{% endif %}>
+                                    {{ customer.name }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="form-group">
+                            <label>&nbsp;</label>
+                            <button type="submit" class="btn btn-primary d-block w-100">
+                                <i class="fas fa-search"></i> بحث
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </form>
+    
+            <!-- جدول سندات القبض -->
+            <div class="table-responsive">
+                <table class="table table-bordered table-striped">
+                    <thead class="table-header">
+                        <tr>
+                            <th>#</th>
+                            <th>التاريخ</th>
+                            <th>الزبون</th>
+                            <th>المبلغ</th>
+                            <th>طريقة الدفع</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for payment in payments %}
+                        <tr>
+                            <td>{{ payment.id }}</td>
+                            <td>{{ payment.date|date:"Y-m-d" }}</td>
+                            <td>{{ payment.customer.name }}</td>
+                            <td>₪ {{ payment.amount|floatformat:2 }}</td>
+                            <td>{{ payment.get_payment_method_display }}</td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="7" class="text-center">لا توجد سندات قبض</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                    <tfoot class="table-footer">
+                        <tr>
+                            <td colspan="3" class="text-end"><strong>المجموع</strong></td>
+                            <td><strong>₪ {{ total_received|floatformat:2 }}</strong></td>
+                            <td colspan="2"></td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+
+            <!-- الترقيم -->
+            {% if payments.has_other_pages %}
+            <nav aria-label="Page navigation" class="mt-4 no-print">
+                <ul class="pagination justify-content-center">
+                    {% if payments.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ payments.previous_page_number }}&start_date={{ request.GET.start_date }}&end_date={{ request.GET.end_date }}&customer={{ request.GET.customer }}">السابق</a>
+                    </li>
+                    {% endif %}
+
+                    {% for num in payments.paginator.page_range %}
+                    <li class="page-item {% if payments.number == num %}active{% endif %}">
+                        <a class="page-link" href="?page={{ num }}&start_date={{ request.GET.start_date }}&end_date={{ request.GET.end_date }}&customer={{ request.GET.customer }}">{{ num }}</a>
+                    </li>
+                    {% endfor %}
+
+                    {% if payments.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ payments.next_page_number }}&start_date={{ request.GET.start_date }}&end_date={{ request.GET.end_date }}&customer={{ request.GET.customer }}">التالي</a>
+                    </li>
+                    {% endif %}
+                </ul>
+            </nav>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function updateCustomerName(selectElement) {
+    var customerNameElement = document.getElementById('customerName');
+    var selectedOption = selectElement.options[selectElement.selectedIndex];
+    
+    if (selectedOption.value === "") {
+        customerNameElement.textContent = "جميع الزبائن";
+    } else {
+        customerNameElement.textContent = selectedOption.text;
+    }
+}
+</script>
+{% endblock %}

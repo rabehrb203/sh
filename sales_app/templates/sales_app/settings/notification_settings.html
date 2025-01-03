@@ -1,0 +1,35 @@
+{% extends "sales_app/base.html" %}
+
+{% block title %}إعدادات الإشعارات{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h2 class="mb-4">إعدادات الإشعارات</h2>
+    <div class="card">
+        <div class="card-body">
+            <form method="post">
+                {% csrf_token %}
+                <div class="mb-3">
+                    <h5>إشعارات المخزون</h5>
+                    <div class="form-check">
+                        <input type="checkbox" class="form-check-input" id="low_stock_notifications" name="low_stock_notifications">
+                        <label class="form-check-label" for="low_stock_notifications">تنبيه عند انخفاض المخزون</label>
+                    </div>
+                    <div class="mt-2">
+                        <label for="low_stock_threshold" class="form-label">حد المخزون المنخفض</label>
+                        <input type="number" class="form-control" id="low_stock_threshold" name="low_stock_threshold">
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <h5>إشعارات الفواتير</h5>
+                    <div class="form-check">
+                        <input type="checkbox" class="form-check-input" id="invoice_due_notifications" name="invoice_due_notifications">
+                        <label class="form-check-label" for="invoice_due_notifications">تنبيه عند استحقاق الفواتير</label>
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-primary">حفظ التغييرات</button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

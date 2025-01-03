@@ -1,0 +1,209 @@
+{% extends 'sales_app/base.html' %}
+
+{% block title %}قائمة الفواتير{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header Section -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="mb-1">قائمة الفواتير</h2>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{% url 'sales_app:dashboard' %}">الرئيسية</a></li>
+                    <li class="breadcrumb-item active">الفواتير</li>
+                </ol>
+            </nav>
+        </div>
+        <div>
+            <a href="{% url 'sales_app:create_invoice' %}" class="btn btn-primary">
+                <i class="fas fa-plus-circle me-1"></i> إضافة فاتورة جديدة
+            </a>
+        </div>
+    </div>
+
+    <!-- Filters Section -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <form class="row g-3">
+                <div class="col-md-3">
+                    <label class="form-label">البحث</label>
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="fas fa-search"></i></span>
+                        <input type="text" class="form-control" placeholder="رقم الفاتورة أو اسم العميل...">
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">حالة الدفع</label>
+                    <select class="form-select">
+                        <option value="">الكل</option>
+                        <option value="paid">مدفوع</option>
+                        <option value="unpaid">غير مدفوع</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">من تاريخ</label>
+                    <input type="date" class="form-control">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">إلى تاريخ</label>
+                    <input type="date" class="form-control">
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Invoices Table -->
+    <div class="card">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead>
+                        <tr>
+                            <th class="border-0">رقم الفاتورة</th>
+                            <th class="border-0">التاريخ</th>
+                            <th class="border-0">العميل</th>
+                            <th class="border-0">المبلغ الإجمالي</th>
+                            <th class="border-0">حالة الدفع</th>
+                            <th class="border-0">الإجراءات</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for invoice in page_obj %}
+                        <tr>
+                            <td class="align-middle">#{{ invoice.id }}</td>
+                            <td class="align-middle">{{ invoice.date|date:"Y-m-d" }}</td>
+                            <td class="align-middle">{{ invoice.customer }}</td>
+                            <td class="align-middle">{{ invoice.get_subtotal }} ₪</td>
+                            <td class="align-middle">
+                                {% if invoice.is_paid %}
+                                    <span class="badge bg-success-subtle text-success">
+                                        <i class="fas fa-check-circle me-1"></i> مدفوع
+                                    </span>
+                                {% else %}
+                                    <span class="badge bg-warning-subtle text-warning">
+                                        <i class="fas fa-clock me-1"></i> غير مدفوع
+                                    </span>
+                                {% endif %}
+                            </td>
+                            <td class="align-middle">
+                                <div class="btn-group">
+                                    <a href="{% url 'sales_app:invoice_detail' pk=invoice.pk %}" class="btn btn-sm btn-info">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                    <button onclick="printInvoice('{{ invoice.id }}')" class="btn btn-sm btn-secondary">
+                                        <i class="fas fa-print"></i>
+                                    </button>
+                                    <a href="{% url 'sales_app:edit_invoice' pk=invoice.pk %}" class="btn btn-sm btn-primary">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                    <button type="button" class="btn btn-sm btn-danger delete-btn" data-bs-toggle="modal" data-bs-target="#deleteModal{{ invoice.id }}">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="6" class="text-center py-5">
+                                <i class="fas fa-file-invoice text-muted fa-3x mb-3"></i>
+                                <h5 class="text-muted">لا توجد فواتير</h5>
+                                <p class="text-muted mb-0">قم بإضافة فاتورة جديدة للبدء</p>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Delete Modals -->
+    {% for invoice in page_obj %}
+    <div class="modal" id="deleteModal{{ invoice.id }}" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">تأكيد الحذف</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    هل أنت متأكد من حذف الفاتورة رقم #{{ invoice.id }}؟
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+                    <form action="{% url 'sales_app:delete_invoice' pk=invoice.pk %}" method="post" class="d-inline">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-danger">حذف</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+
+    <!-- Pagination -->
+    {% if page_obj.has_other_pages %}
+    <nav aria-label="Page navigation" class="mt-4">
+        <ul class="pagination justify-content-center">
+            {% if page_obj.has_previous %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.previous_page_number }}">
+                    <i class="fas fa-chevron-right"></i>
+                </a>
+            </li>
+            {% endif %}
+            
+            {% for num in page_obj.paginator.page_range %}
+                {% if page_obj.number == num %}
+                <li class="page-item active">
+                    <span class="page-link">{{ num }}</span>
+                </li>
+                {% else %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+                </li>
+                {% endif %}
+            {% endfor %}
+            
+            {% if page_obj.has_next %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.next_page_number }}">
+                    <i class="fas fa-chevron-left"></i>
+                </a>
+            </li>
+            {% endif %}
+        </ul>
+    </nav>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function printInvoice(invoiceId) {
+    const printUrl = "{% url 'sales_app:print_invoice' 999999 %}".replace('999999', invoiceId);
+    fetch(printUrl)
+        .then(response => response.text())
+        .then(html => {
+            const printWindow = window.open('', '_blank');
+            printWindow.document.write(html);
+            printWindow.document.close();
+            printWindow.onload = function() {
+                printWindow.print();
+                printWindow.onafterprint = function() {
+                    printWindow.close();
+                };
+            };
+        })
+        .catch(error => console.error('Error:', error));
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize all delete modals
+    document.querySelectorAll('.modal').forEach(modalElement => {
+        new bootstrap.Modal(modalElement);
+    });
+});
+</script>
+{% endblock %}

@@ -1,0 +1,62 @@
+{% extends 'sales_app/base.html' %}
+
+{% block content %}
+
+<div class="container-fluid py-4">
+    <h2 class="mb-4">النسخ الاحتياطي</h2>
+    
+    <div class="row">
+        <div class="col-md-12 mb-4">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">إنشاء نسخة احتياطية جديدة</h5>
+                    <form method="post">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-download me-2"></i>
+                            إنشاء نسخة احتياطية
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">النسخ الاحتياطية المتوفرة</h5>
+                    {% if backups %}
+                    <div class="table-responsive">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>اسم الملف</th>
+                                    <th>تاريخ الإنشاء</th>
+                                    <th>الإجراءات</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for backup in backups %}
+                                <tr>
+                                    <td>{{ backup }}</td>
+                                    <td>{{ backup|slice:"7:-5"|date:"Y-m-d H:i:s" }}</td>
+                                    <td>
+                                        <a href="{% url 'sales_app:download_backup' backup %}" class="btn btn-sm btn-primary">
+                                            <i class="fas fa-download"></i>
+                                            تحميل
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <p class="text-muted">لا توجد نسخ احتياطية متوفرة.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

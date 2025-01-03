@@ -1,0 +1,250 @@
+{% extends 'sales_app/base.html' %}
+{% block title %}الزبائن{% endblock %}
+{% block content %}
+<style>
+    .container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 20px;
+    }
+
+    .header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 2rem;
+    }
+
+    .page-title {
+        font-size: 1.8rem;
+        color: #2c3e50;
+        margin: 0;
+    }
+
+    .add-button {
+        background-color: #3498db;
+        color: white;
+        padding: 0.6rem 1.2rem;
+        border-radius: 6px;
+        text-decoration: none;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        transition: background-color 0.3s;
+    }
+
+    .add-button:hover {
+        background-color: #2980b9;
+    }
+
+    .card-body {
+        background: white;
+        overflow: hidden;
+    }
+
+    .table-container {
+        overflow-x: auto;
+    }
+
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        text-align: right;
+    }
+
+    th {
+        background-color: #f8f9fa;
+        color: #2c3e50;
+        padding: 1rem;
+        font-weight: 600;
+        border-bottom: 2px solid #eee;
+    }
+
+    td {
+        padding: 1rem;
+        border-bottom: 1px solid #eee;
+        color: #444;
+    }
+
+    tr:hover {
+        background-color: #f8f9fa;
+    }
+
+    .action-buttons {
+        display: flex;
+        gap: 8px;
+        justify-content: center;
+    }
+
+    .btn {
+        padding: 0.4rem 0.8rem;
+        border-radius: 4px;
+        border: none;
+        cursor: pointer;
+        transition: opacity 0.3s;
+    }
+
+    .btn:hover {
+        opacity: 0.9;
+    }
+
+    .btn-view {
+        background-color: #00bcd4;
+        color: white;
+    }
+
+    .btn-edit {
+        background-color: #ffc107;
+        color: #333;
+    }
+
+    .empty-message {
+        text-align: center;
+        padding: 2rem;
+        color: #666;
+    }
+
+    .pagination {
+        display: flex;
+        justify-content: center;
+        gap: 5px;
+        margin-top: 2rem;
+        list-style: none;
+        padding: 0;
+    }
+
+    .pagination a {
+        color: #3498db;
+        padding: 8px 12px;
+        text-decoration: none;
+        border: 1px solid #eee;
+        border-radius: 4px;
+        transition: all 0.3s;
+    }
+
+    .pagination a:hover {
+        background-color: #f8f9fa;
+    }
+
+    .pagination .active {
+        background-color: #3498db;
+        color: white;
+        padding: 8px 12px;
+        border-radius: 4px;
+    }
+
+    @media (max-width: 768px) {
+        .header {
+            flex-direction: column;
+            gap: 1rem;
+            text-align: center;
+        }
+        
+        th, td {
+            padding: 0.5rem;
+        }
+    }
+</style>
+
+<div class="container">
+    <div class="header">
+        <a href="{% url 'sales_app:add_customer' %}" class="add-button">
+            <i class="fas fa-plus"></i>
+            إضافة زبون
+        </a>
+    </div>
+
+    <div class="card-body">
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>الرقم</th>
+                        <th>اسم الزبون</th>
+                        <th>البريد الإلكتروني</th>
+                        <th>رقم الهاتف</th>
+                        <th>تاريخ الإضافة</th>
+                        <th>إجمالي المشتريات</th>
+                        <th>الإجراءات</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for customer in customers %}
+                    <tr>
+                        <td>{{ customer.id }}</td>
+                        <td>{{ customer.name }}</td>
+                        <td>{{ customer.email|default:"-" }}</td>
+                        <td>{{ customer.phone|default:"-" }}</td>
+                        <td>{{ customer.created_at|date:"Y-m-d" }}</td>
+                        <td>{{ customer.total_purchases }}</td>
+                        <td class="action-buttons">
+                            <a href="{% url 'sales_app:customer_detail' customer.id %}" class="btn btn-sm btn-outline-primary">
+                                <i class="fas fa-eye"></i>
+                            </a>
+                            <a href="{% url 'sales_app:edit_customer' customer.pk %}" class="btn btn-sm btn-edit">
+                                <i class="fas fa-edit"></i>
+                            </a>
+                            <button type="button" class="btn btn-sm btn-danger" data-bs-toggle="modal" data-bs-target="#deleteModal{{ customer.id }}">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                            
+                            <!-- Delete Modal -->
+                            <div class="modal fade" id="deleteModal{{ customer.id }}" tabindex="-1" aria-labelledby="deleteModalLabel{{ customer.id }}" aria-hidden="true">
+                                <div class="modal-dialog">
+                                    <div class="modal-content">
+                                        <div class="modal-header">
+                                            <h5 class="modal-title" id="deleteModalLabel{{ customer.id }}">تأكيد الحذف</h5>
+                                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                        </div>
+                                        <div class="modal-body">
+                                            هل أنت متأكد من حذف الزبون {{ customer.name }}؟
+                                        </div>
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+                                            <form action="{% url 'sales_app:delete_customer' customer.id %}" method="post" style="display: inline;">
+                                                {% csrf_token %}
+                                                <button type="submit" class="btn btn-danger">حذف</button>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="7" class="empty-message">لا يوجد زبائن</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    {% if customers.has_other_pages %}
+    <nav>
+        <ul class="pagination">
+            {% if customers.has_previous %}
+            <li>
+                <a href="?page={{ customers.previous_page_number }}">السابق</a>
+            </li>
+            {% endif %}
+            
+            {% for num in customers.paginator.page_range %}
+                {% if customers.number == num %}
+                <li><span class="active">{{ num }}</span></li>
+                {% else %}
+                <li><a href="?page={{ num }}">{{ num }}</a></li>
+                {% endif %}
+            {% endfor %}
+            
+            {% if customers.has_next %}
+            <li>
+                <a href="?page={{ customers.next_page_number }}">التالي</a>
+            </li>
+            {% endif %}
+        </ul>
+    </nav>
+    {% endif %}
+</div>
+{% endblock %}

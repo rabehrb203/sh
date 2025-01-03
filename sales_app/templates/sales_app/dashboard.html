@@ -1,0 +1,195 @@
+{% extends 'sales_app/base.html' %}
+
+{% block title %}لوحة التحكم{% endblock %}
+
+{% block content %}
+<style>
+/* تنسيق الحاوية */
+.container-fluid {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+/* العناوين */
+h1 {
+    font-size: 2rem;
+    margin-bottom: 20px;
+}
+
+/* تنسيق الصفوف */
+.row {
+    display: flex;
+    flex-wrap: wrap;
+    margin: -10px;
+}
+
+.col-md-3, .col-md-6 {
+    flex: 1 1 calc(33.333% - 20px); /* العرض مع مسافات */
+    margin: 10px;
+    box-sizing: border-box;
+}
+
+/* تصميم البطاقات */
+.card {
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+}
+
+.card-body {
+    padding: 15px;
+    text-align: center;
+}
+
+.card-title {
+    font-size: 1.2rem;
+    margin: 10px 0;
+}
+
+.card-header {
+    background-color: #f7f7f7;
+    padding: 10px 15px;
+    font-size: 1rem;
+    border-bottom: 1px solid #ddd;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+/* تصميم الجدول */
+.table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.table th, .table td {
+    border: 1px solid #ddd;
+    padding: 10px;
+    text-align: right     ;
+}
+
+.table th {
+    background-color: #f5f5f5;
+}
+
+.text-danger {
+    color: red;
+}
+
+/* تصميم الأزرار */
+.btn {
+    display: inline-block;
+    padding: 5px 10px;
+    background-color: #007bff;
+    color: #fff;
+    text-decoration: none;
+    border-radius: 5px;
+    font-size: 0.9rem;
+    text-align: center;
+}
+
+.btn:hover {
+    background-color: #0056b3;
+}
+</style>
+
+<div class="container-fluid">
+    
+    <!-- الإحصائيات السريعة -->
+    <div class="row">
+        <div class="col-md-3">
+            <div class="card">
+                <div class="card-body">
+                    <i class="fas fa-users fa-2x mb-2" style="color: #007bff;"></i>
+                    <h5 class="card-title">إجمالي الزبائن</h5>
+                    <h3>{{ total_customers }}</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card">
+                <div class="card-body">
+                    <i class="fas fa-box fa-2x mb-2" style="color: #28a745;"></i>
+                    <h5 class="card-title">إجمالي المنتجات</h5>
+                    <h3>{{ total_products }}</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card">
+                <div class="card-body">
+                    <i class="fas fa-file-invoice-dollar fa-2x mb-2" style="color: #17a2b8;"></i>
+                    <h5 class="card-title">الفواتير اليوم</h5>
+                    <h3>{{ today_invoices }}</h3>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- الفواتير الأخيرة -->
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5>آخر الفواتير</h5>
+                    <a href="{% url 'sales_app:invoice_list' %}" class="btn">عرض الكل</a>
+                </div>
+                <div class="card-body">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>رقم الفاتورة</th>
+                                <th>الزبون</th>
+                                <th>المبلغ</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for invoice in recent_invoices %}
+                            <tr>
+                                <td>#{{ invoice.id }}</td>
+                                <td>{{ invoice.customer.name }}</td>
+                                <td>{{ invoice.get_total }} ₪</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- المنتجات منخفضة المخزون -->
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5>المنتجات منخفضة المخزون</h5>
+                    <a href="{% url 'sales_app:product_list' %}" class="btn">عرض الكل</a>
+                </div>
+                <div class="card-body">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>المنتج</th>
+                                <th>الكمية المتبقية</th>
+                                <th>سعر البيع</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for product in low_stock_products %}
+                            <tr>
+                                <td>{{ product.name }}</td>
+                                <td class="{% if product.quantity < 5 %}text-danger{% endif %}">
+                                    {{ product.quantity }}
+                                </td>
+                                <td>{{ product.selling_price }} ₪</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

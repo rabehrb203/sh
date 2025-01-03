@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <title>تقرير المخزون</title>
+    <style>
+        @page {
+            size: A4;
+            margin: 2cm;
+        }
+        body {
+            font-family: 'Arial', sans-serif;
+            line-height: 1.6;
+            direction: rtl;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .company-info {
+            margin-bottom: 20px;
+        }
+        .report-info {
+            margin-bottom: 20px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: right;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        .total {
+            text-align: left;
+            margin-top: 20px;
+            font-weight: bold;
+        }
+        .footer {
+            position: fixed;
+            bottom: 0;
+            width: 100%;
+            text-align: center;
+            font-size: 12px;
+            padding: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>تقرير المخزون</h1>
+    </div>
+
+    <div class="company-info">
+        <h3>{{ settings.company_name }}</h3>
+        {% if settings.company_address %}<p>{{ settings.company_address }}</p>{% endif %}
+        {% if settings.company_phone %}<p>هاتف: {{ settings.company_phone }}</p>{% endif %}
+        {% if settings.tax_number %}<p>الرقم الضريبي: {{ settings.tax_number }}</p>{% endif %}
+    </div>
+
+    <div class="report-info">
+        <p>تاريخ التقرير: {{ report_date }}</p>
+    </div>
+
+    <table>
+        <thead>
+            <tr>
+                <th>#</th>
+                <th>المنتج</th>
+                <th>الكمية</th>
+                <th>سعر الشراء</th>
+                <th>سعر البيع</th>
+                <th>القيمة الإجمالية</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in inventory %}
+            <tr>
+                <td>{{ forloop.counter }}</td>
+                <td>{{ item.name }}</td>
+                <td>{{ item.quantity }}</td>
+                <td>{{ item.purchase_price|floatformat:2 }}</td>
+                <td>{{ item.selling_price|floatformat:2 }}</td>
+                <td>{{ item.total_value|floatformat:2 }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <div class="total">
+        <p>إجمالي قيمة المخزون: {{ total_inventory_value|floatformat:2 }} {{ settings.currency }}</p>
+    </div>
+
+    <div class="footer">
+        <p>تم إنشاء هذا التقرير بتاريخ {{ report_date }}</p>
+    </div>
+</body>
+</html>

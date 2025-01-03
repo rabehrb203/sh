@@ -1,0 +1,47 @@
+{% extends "sales_app/base.html" %}
+
+{% block title %}النسخ الاحتياطي{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h2 class="mb-4">النسخ الاحتياطي</h2>
+    <div class="card mb-4">
+        <div class="card-body">
+            <h5 class="card-title">النسخ الاحتياطي التلقائي</h5>
+            <form method="post">
+                {% csrf_token %}
+                <div class="mb-3">
+                    <div class="form-check">
+                        <input type="checkbox" class="form-check-input" id="auto_backup" name="auto_backup">
+                        <label class="form-check-label" for="auto_backup">تفعيل النسخ الاحتياطي التلقائي</label>
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <label for="backup_frequency" class="form-label">تكرار النسخ الاحتياطي</label>
+                    <select class="form-select" id="backup_frequency" name="backup_frequency">
+                        <option value="daily">يومياً</option>
+                        <option value="weekly">أسبوعياً</option>
+                        <option value="monthly">شهرياً</option>
+                    </select>
+                </div>
+                <button type="submit" class="btn btn-primary">حفظ الإعدادات</button>
+            </form>
+        </div>
+    </div>
+    
+    <div class="card">
+        <div class="card-body">
+            <h5 class="card-title">النسخ الاحتياطي اليدوي</h5>
+            <p class="card-text">قم بإنشاء نسخة احتياطية يدوية من قاعدة البيانات.</p>
+            <form method="post" action="{% url 'sales_app:backup_settings' %}">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="manual_backup">
+                <button type="submit" class="btn btn-success">
+                    <i class="fas fa-download me-2"></i>
+                    إنشاء نسخة احتياطية الآن
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

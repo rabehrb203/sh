@@ -1,0 +1,164 @@
+{% extends 'sales_app/base.html' %}
+
+{% block title %}الإعدادات{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <h1 class="mb-4">الإعدادات</h1>
+    
+    <div class="row">
+        <div class="col-md-3">
+            <!-- Settings Navigation -->
+            <div class="card mb-4">
+                <div class="card-body p-0">
+                    <div class="nav flex-column nav-pills">
+                        <button class="nav-link active" data-bs-toggle="pill" data-bs-target="#company-info">
+                            <i class="fas fa-building me-2"></i>
+                            معلومات الشركة
+                        </button>
+                        <button class="nav-link" data-bs-toggle="pill" data-bs-target="#invoice-settings">
+                            <i class="fas fa-file-invoice me-2"></i>
+                            إعدادات الفواتير
+                        </button>
+                        <button class="nav-link" data-bs-toggle="pill" data-bs-target="#notification-settings">
+                            <i class="fas fa-bell me-2"></i>
+                            إعدادات الإشعارات
+                        </button>
+                        <button class="nav-link" data-bs-toggle="pill" data-bs-target="#backup-settings">
+                            <i class="fas fa-database me-2"></i>
+                            النسخ الاحتياطي
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-9">
+            <!-- Settings Content -->
+            <div class="tab-content">
+                <!-- Company Information -->
+                <div class="tab-pane fade show active" id="company-info">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="mb-0">معلومات الشركة</h5>
+                        </div>
+                        <div class="card-body">
+                            <form method="post" action="{% url 'sales_app:save_company_settings' %}">
+                                {% csrf_token %}
+                                <div class="mb-3">
+                                    <label class="form-label">اسم الشركة</label>
+                                    <input type="text" class="form-control" name="company_name" value="{{ settings.company_name }}">
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">العنوان</label>
+                                    <textarea class="form-control" name="company_address" rows="3">{{ settings.company_address }}</textarea>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">رقم الهاتف</label>
+                                    <input type="text" class="form-control" name="company_phone" value="{{ settings.company_phone }}">
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">البريد الإلكتروني</label>
+                                    <input type="email" class="form-control" name="company_email" value="{{ settings.company_email }}">
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">الرقم الضريبي</label>
+                                    <input type="text" class="form-control" name="tax_number" value="{{ settings.tax_number }}">
+                                </div>
+                                <button type="submit" class="btn btn-primary">حفظ التغييرات</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Invoice Settings -->
+                <div class="tab-pane fade" id="invoice-settings">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="mb-0">إعدادات الفواتير</h5>
+                        </div>
+                        <div class="card-body">
+                            <form method="post" action="{% url 'sales_app:save_invoice_settings' %}">
+                                {% csrf_token %}
+                                <div class="mb-3">
+                                    <label class="form-label">نسبة الضريبة (%)</label>
+                                    <input type="number" class="form-control" name="tax_rate" value="{{ settings.tax_rate }}" step="0.01">
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">عملة الفواتير</label>
+                                    <select class="form-select" name="currency">
+                                        <option value="ILS" {% if settings.currency == 'ILS' %}selected{% endif %}>₪ شيكل</option>
+                                        <option value="SAR" {% if settings.currency == 'SAR' %}selected{% endif %}>ر.س ريال</option>
+                                        <option value="USD" {% if settings.currency == 'USD' %}selected{% endif %}>دولار أمريكي</option>
+                                        <option value="EUR" {% if settings.currency == 'EUR' %}selected{% endif %}>يورو</option>
+                                    </select>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">ملاحظات الفاتورة الافتراضية</label>
+                                    <textarea class="form-control" name="invoice_notes" rows="3">{{ settings.invoice_notes }}</textarea>
+                                </div>
+                                <button type="submit" class="btn btn-primary">حفظ التغييرات</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Notification Settings -->
+                <div class="tab-pane fade" id="notification-settings">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="mb-0">إعدادات الإشعارات</h5>
+                        </div>
+                        <div class="card-body">
+                            <form method="post" action="{% url 'sales_app:save_notification_settings' %}">
+                                {% csrf_token %}
+                                <div class="mb-3">
+                                    <div class="form-check form-switch">
+                                        <input class="form-check-input" type="checkbox" name="low_stock_notifications" 
+                                               {% if settings.low_stock_notifications %}checked{% endif %}>
+                                        <label class="form-check-label">تنبيهات المخزون المنخفض</label>
+                                    </div>
+                                </div>
+                                <div class="mb-3">
+                                    <div class="form-check form-switch">
+                                        <input class="form-check-input" type="checkbox" name="payment_notifications"
+                                               {% if settings.payment_notifications %}checked{% endif %}>
+                                        <label class="form-check-label">تنبيهات المدفوعات</label>
+                                    </div>
+                                </div>
+                                <div class="mb-3">
+                                    <div class="form-check form-switch">
+                                        <input class="form-check-input" type="checkbox" name="invoice_notifications"
+                                               {% if settings.invoice_notifications %}checked{% endif %}>
+                                        <label class="form-check-label">تنبيهات الفواتير</label>
+                                    </div>
+                                </div>
+                                <button type="submit" class="btn btn-primary">حفظ التغييرات</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Backup Settings -->
+                <div class="tab-pane fade" id="backup-settings">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="mb-0">النسخ الاحتياطي</h5>
+                        </div>
+                        <div class="card-body">
+                            <form method="post" action="{% url 'sales_app:backup_database' %}">
+                                {% csrf_token %}
+                                <p class="mb-3">آخر نسخة احتياطية: {{ settings.last_backup_date|default:"لا يوجد" }}</p>
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-download me-2"></i>
+                                    إنشاء نسخة احتياطية
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

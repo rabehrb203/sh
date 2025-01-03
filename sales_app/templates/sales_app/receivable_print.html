@@ -1,0 +1,276 @@
+{% extends 'sales_app/base.html' %}
+{% load static %}
+
+{% block title %}طباعة سند قبض{% endblock %}
+
+{% block content %}
+<div class="container mt-4" id="printable-content">
+    <div class="receipt-border">
+        <div class="receipt-content">
+            <!-- ترويسة السند -->
+            <div class="receipt-header">
+                <h3 class="text-center mb-0">سند قبض</h3>
+                <div class="serial-number">#{{ receivable.id }}</div>
+            </div>
+
+            <!-- محتوى السند -->
+            <div class="receipt-body">
+                <!-- المعلومات الرئيسية -->
+                <div class="info-row">
+                    <div class="info-item"><span class="label">التاريخ:</span> {{ receivable.date|date:"Y-m-d" }}</div>
+                    <div class="info-item"><span class="label">رقم السند:</span> {{ receivable.id }}</div>
+                </div>
+                
+                <div class="info-row">
+                    <div class="info-item"><span class="label">استلمنا من السيد/ة:</span> {{ receivable.customer.name|default:"-" }}</div>
+                    {% if receivable.customer.phone %}
+                    <div class="info-item"><span class="label">رقم الهاتف:</span> {{ receivable.customer.phone }}</div>
+                    {% endif %}
+                </div>
+
+                <div class="info-row">
+                    <div class="info-item"><span class="label">طريقة الدفع:</span> {{ receivable.get_payment_method_display }}</div>
+                    <div class="info-item"><span class="label">مبلغ وقدره:</span> {{ receivable.amount }} ₪</div>
+                </div>
+
+                <div class="info-row">
+                    <div class="info-item"><span class="label">المبلغ بالحروف:</span> <span id="amount-in-words"></span></div>
+                </div>
+
+                <!-- قسم التوقيعات -->
+                <div class="signatures-section">
+                    <div class="signature-box">
+                        <p>توقيع المستلم</p>
+                        <div class="signature-line"></div>
+                    </div>
+                    <div class="signature-box">
+                        <p>توقيع الزبون</p>
+                        <div class="signature-line"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap');
+
+/* إعدادات عامة */
+body {
+    font-family: 'Cairo', sans-serif;
+    line-height: 1.6;
+    direction: rtl;
+    margin: 0;
+}
+
+/* ترويسة السند */
+.receipt-border {
+    border: 2px solid #3498db;
+    padding: 30px;
+    margin: 20px auto;
+    max-width: 800px;
+    background: #fff;
+    box-shadow: 0 0 15px rgba(52, 152, 219, 0.1);
+}
+
+.receipt-header {
+    background: linear-gradient(135deg, #3498db, #2980b9);
+    padding: 20px;
+    position: relative;
+    margin-bottom: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;  
+}
+
+.serial-number {
+    margin-top: 5px;
+    color: #ffffff;
+    font-weight: 600;
+    direction: ltr;
+}
+
+.receipt-header h3 {
+    color: #ffffff;
+    font-weight: 700;
+    font-size: 24px;
+    margin: 0;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+/* محتوى السند */
+.receipt-body {
+    padding: 20px;
+}
+
+.info-row {
+    margin-bottom: 20px;
+    padding: 15px;
+    background-color: #f8f9fa;
+    border-radius: 8px;
+    border-left: 4px solid #3498db;
+}
+
+.info-item {
+    margin-bottom: 10px;
+    font-size: 16px;
+}
+
+.label {
+    font-weight: 600;
+    color: #3498db;
+    margin-left: 8px;
+}
+
+/* قسم التوقيعات */
+.signatures-section {
+    margin-top: 40px;
+    border-top: 2px dashed #e2e8f0;
+    padding-top: 20px;
+}
+
+.signature-box {
+    text-align: center;
+    padding: 15px;
+}
+
+.signature-box p {
+    color: #2c3e50;
+    font-weight: 600;
+    margin-bottom: 10px;
+}
+
+.signature-line {
+    width: 80%;
+    margin: 10px auto;
+    border-bottom: 2px solid #3498db;
+    position: relative;
+}
+
+.signature-line::after {
+    content: '×';
+    position: absolute;
+    right: 0;
+    bottom: 5px;
+    color: #95a5a6;
+    font-size: 14px;
+}
+
+/* إعدادات الطباعة */
+@media print {
+    @page {
+        size: A4;
+        margin: 0;
+    }
+
+    body {
+        margin: 1cm;
+    }
+
+    .no-print {
+        display: none !important;
+    }
+    #sidebar {
+        display: none !important;
+    }
+    #printable-content, #printable-content * {
+        visibility: visible;
+    }
+
+    #printable-content {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+    }
+
+    .receipt-border {
+        border: 2px solid #f8f9fa !important;
+        box-shadow: none !important;
+        margin: 0 !important;
+    }
+
+    .receipt-header {
+        background: #3498db !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+    }
+
+    .info-row {
+        background-color: #f8f9fa !important;
+        border-left-color: #3498db !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+    }
+
+    .signature-line {
+        border-bottom: 2px solid #3498db !important;
+    }
+
+    .signatures-section {
+        border-top: 2px dashed #e2e8f0 !important;
+    }
+}
+</style>
+
+{% if print_mode %}
+<script>
+    
+    function convertToArabicWords(amount) {
+        const ones = ["", "واحد", "اثنان", "ثلاثة", "أربعة", "خمسة", "ستة", "سبعة", "ثمانية", "تسعة"];
+        const tens = ["", "عشرة", "عشرون", "ثلاثون", "أربعون", "خمسون", "ستون", "سبعون", "ثمانون", "تسعون"];
+        const hundreds = ["", "مائة", "مئتان", "ثلاثمائة", "أربعمائة", "خمسمائة", "ستمائة", "سبعمائة", "ثمانمائة", "تسعمائة"];
+        
+        if (amount === 0) return "صفر";
+        
+        let words = "";
+        const numAmount = Math.floor(amount);
+        
+        // Handle thousands
+        if (numAmount >= 1000) {
+            const thousands = Math.floor(numAmount / 1000);
+            if (thousands === 1) words += "ألف ";
+            else if (thousands === 2) words += "ألفان ";
+            else words += ones[thousands] + " آلاف ";
+            amount = numAmount % 1000;
+        }
+        
+        // Handle hundreds
+        if (amount >= 100) {
+            words += hundreds[Math.floor(amount / 100)] + " ";
+            amount %= 100;
+        }
+        
+        // Handle remaining tens and ones
+        if (amount > 0) {
+            if (amount < 10) {
+                words += ones[amount];
+            } else if (amount === 10) {
+                words += "عشرة";
+            } else if (amount < 20) {
+                words += ones[amount % 10] + " عشر";
+            } else {
+                if (amount % 10 !== 0) {
+                    words += ones[amount % 10] + " و";
+                }
+                words += tens[Math.floor(amount / 10)];
+            }
+        }
+        
+        return words.trim() + " شيكل فقط لا غير";
+    }
+
+    window.onload = function() {
+        var amount = parseFloat("{{ receivable.amount }}");
+
+        if (!isNaN(amount) && amount > 0) {
+            document.getElementById('amount-in-words').textContent = convertToArabicWords(amount);
+        } else {
+            document.getElementById('amount-in-words').textContent = "غير محدد";
+        }
+    }
+</script>
+{% endif %}
+{% endblock %}

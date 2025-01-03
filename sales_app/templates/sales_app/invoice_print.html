@@ -1,0 +1,259 @@
+{% extends 'sales_app/base_print.html' %}
+{% load static %}
+
+{% block title %}فاتورة رقم {{ invoice.id }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    @font-face {
+        font-family: 'Cairo';
+        src: url('{% static "fonts/cairo.ttf" %}') format('truetype');
+        font-weight: normal;
+        font-style: normal;
+    }
+
+    @media print {
+        @page {
+            size: A4;
+            margin: 0;
+        }
+        body {
+            margin: 1cm;
+        }
+        .no-print {
+            display: none !important;
+        }
+    }
+
+    body {
+        font-family: 'Cairo', sans-serif;
+        line-height: 1.6;
+        color: #2c3e50;
+        background-color: #fff;
+    }
+
+    .invoice-container {
+        max-width: 21cm;
+        margin: 0 auto;
+        padding: 1.5rem;
+        position: relative;
+        min-height: 27cm; /* Reduced height to ensure content fits */
+        box-sizing: border-box;
+    }
+
+    .invoice-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .header-left {
+        width: 25%;
+        font-size: 0.9rem;
+        color: #666;
+    }
+
+    .header-right {
+        width: 25%;
+        text-align: left;
+    }
+
+    .company-logo {
+        max-width: 150px;
+        height: auto;
+        margin-bottom: 1rem;
+    }
+
+    .header-center {
+        width: 50%;
+        text-align: center;
+        margin: 1rem 0;
+    }
+
+    .customer-name {
+        font-size: 1.3rem;
+        font-weight: 700;
+        color: #2c3e50;
+        margin-bottom: 0.5rem;
+    }
+
+    .customer-number {
+        font-size: 0.8rem;
+        color: #666;
+        direction: ltr;
+    }
+
+    .items-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    .items-table th {
+        background-color: #3498db;
+        color: white;
+        padding: 0.5rem;
+        text-align: right;
+    }
+
+    .items-table td {
+        padding: 0.4rem;
+        border-bottom: 1px solid #e0e0e0;
+    }
+
+    .items-table tr:nth-child(even) {
+        background-color: #f8f9fa;
+    }
+
+    .totals-section {
+        display: flex;
+        justify-content: flex-end;
+        margin: 1.5rem 0;
+    }
+
+    .totals-table {
+        width: 50%;
+    }
+
+    .totals-table td {
+        padding: 0.4rem;
+        text-align: right;
+    }
+
+    .total-row {
+        background-color: #3498db;
+        color: white;
+        font-weight: bold;
+    }
+
+    .information-section {
+        width: 50%;
+        text-align: center;
+        padding-top: 1rem;
+        color: #7f8c8d;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 2rem;
+    }
+
+    .watermark {
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%) rotate(-45deg);
+        font-size: 6rem;
+        color: rgba(52, 152, 219, 0.05);
+        z-index: -1;
+        white-space: nowrap;
+    }
+
+    .qr-code {
+        width: 80px;
+        height: 80px;
+        padding: 0.5rem;
+        background-color: white;
+        border: 1px solid #3498db;
+    }
+
+    .print-button {
+        position: fixed;
+        top: 2rem;
+        right: 2rem;
+        padding: 0.8rem 1.5rem;
+        background-color: #3498db;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        transition: background-color 0.3s;
+        font-family: 'Cairo', sans-serif;
+    }
+
+    .print-button:hover {
+        background-color: #2980b9;
+    }
+
+    @media print {
+        .print-button {
+            display: none;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<button onclick="window.print()" class="print-button no-print">طباعة الفاتورة</button>
+
+<div class="invoice-container">
+    <div class="watermark">نسخة أصلية</div>
+
+    <div class="invoice-header">
+        <div class="header-left">
+            <div>التاريخ: {{ invoice.date|date:"Y/m/d" }}</div>
+            <div>رقم الفاتورة: {{ settings.invoice_prefix }}{{ invoice.id }}</div>
+        </div>
+        <div class="header-center">
+            <div class="customer-name">{{ invoice.customer.name }}</div>
+            {% if invoice.customer.phone %}
+            <div class="customer-number">{{ invoice.customer.phone }}</div>
+            {% endif %}
+        </div>
+
+        <div class="header-right">
+            <img src="{% static 'images/logo.png' %}" alt="شعار" class="company-logo">
+        </div>
+    </div>
+
+    
+
+    <table class="items-table">
+        <thead>
+            <tr>
+                <th>#</th>
+                <th>الصنف</th>
+                <th>الكمية</th>
+                <th>السعر</th>
+                <th>المجموع</th>
+            </tr>
+        </thead>
+        <tbody>
+            
+            {% for item in invoice.items.all %}
+            <tr>
+                <td>{{ forloop.counter }}</td>
+                <td>{{ item.product.name }}</td>
+                <td>{{ item.quantity }}</td>
+                <td>{{ item.price }} ₪</td>
+                <td>{{ item.get_subtotal }} ₪</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <div class="totals-section">
+        <div class="information-section">
+            <img src="data:image/png;base64,{{ qr_code }}" alt="رمز QR" class="qr-code">
+        </div>
+        <table class="totals-table">
+            <tr>
+                <td><strong>المجموع قبل الضريبة:</strong></td>
+                <td>{{ invoice.get_subtotal }} ₪</td>
+            </tr>
+            {% if not invoice.tax_exempt %}
+            <tr>
+                <td><strong>ضريبة القيمة المضافة ({{ settings.tax_rate }}%):</strong></td>
+                <td>{{ invoice.get_tax_amount }} ₪</td>
+            </tr>
+            {% endif %}
+            <tr class="total-row">
+                <td><strong>المجموع النهائي:</strong></td>
+                <td>{{ invoice.get_total }} ₪</td>
+            </tr>
+        </table>
+    </div>
+
+    <div class="footer">
+       
+    </div>
+</div>
+{% endblock %}

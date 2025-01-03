@@ -1,0 +1,58 @@
+{% extends 'sales_app/base.html' %}
+
+{% block title %}تفاصيل سند القبض{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <!-- Actions Bar -->
+            <div class="d-flex justify-content-end mb-3">
+                <div class="btn-group">
+                    <button onclick="printReceivable('{{ receivable.id }}')" class="btn btn-primary">
+                        <i class="fas fa-print"></i> طباعة
+                    </button>
+                    <a href="{% url 'sales_app:edit_receivable' receivable.pk %}" class="btn btn-warning">
+                        <i class="fas fa-edit"></i> تعديل
+                    </a>
+                    <a href="{% url 'sales_app:receivable_list' %}" class="btn btn-secondary">
+                        <i class="fas fa-arrow-right"></i> عودة
+                    </a>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h3 class="card-title mb-0">سند قبض رقم {{ receivable.id }}</h3>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <h5 class="text-muted mb-3">معلومات السند</h5>
+                            <p><strong>رقم السند:</strong> {{ receivable.id }}</p>
+                            <p><strong>التاريخ:</strong> {{ receivable.date|date:"Y-m-d" }}</p>
+                            <p><strong>المبلغ:</strong> {{ receivable.amount }} ₪</p>
+                            <p><strong>طريقة الدفع:</strong> {{ receivable.get_payment_method_display }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <h5 class="text-muted mb-3">معلومات الزبون</h5>
+                            <p><strong>اسم الزبون:</strong> {{ receivable.customer.name|default:"-" }}</p>
+                            <p><strong>رقم الهاتف:</strong> {{ receivable.customer.phone|default:"-" }}</p>
+                            <p><strong>البريد الإلكتروني:</strong> {{ receivable.customer.email|default:"-" }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    function printReceivable(id) {
+        var url = "{% url 'sales_app:print_receivable' '0' %}".replace('0', id);
+        window.open(url, '_blank');
+    }
+</script>
+{% endblock %}

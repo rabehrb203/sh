@@ -1,0 +1,143 @@
+{% extends 'sales_app/base.html' %}
+{% load static %}
+
+{% block title %}طباعة سند قبض{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="receipt-container">
+        <!-- ترويسة الشركة -->
+        <div class="text-center mb-4">
+            <h2 class="company-name">{{ company_name }}</h2>
+            <p class="company-info">
+                العنوان: {{ company_address }}<br>
+                هاتف: {{ company_phone }}<br>
+                جوال: {{ company_mobile }}
+            </p>
+        </div>
+
+        <!-- معلومات السند -->
+        <div class="receipt-header">
+            <h3 class="text-center mb-4">سند قبض</h3>
+            <div class="row">
+                <div class="col-6">
+                    <p><strong>رقم السند:</strong> {{ payment.id }}</p>
+                    <p><strong>التاريخ:</strong> {{ payment.date|date:"Y-m-d" }}</p>
+                </div>
+                <div class="col-6">
+                    <p><strong>الزبون:</strong> {{ payment.customer.name }}</p>
+                    <p><strong>رقم الفاتورة:</strong> {{ payment.invoice.id }}</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- تفاصيل المبلغ -->
+        <div class="receipt-details mt-4">
+            <div class="row">
+                <div class="col-12">
+                    <p class="amount-text">
+                        وصلني من السيد/ة <strong>{{ payment.customer.name }}</strong>
+                        مبلغ وقدره <strong>₪ {{ payment.amount|floatformat:2 }}</strong>
+                    </p>
+                    <p class="amount-words">
+                        فقط {{ payment.amount|floatformat:2 }} شيكل لا غير
+                    </p>
+                    <p>
+                        <strong>طريقة الدفع:</strong> {{ payment.get_payment_method_display }}
+                    </p>
+                    {% if payment.notes %}
+                    <p>
+                        <strong>ملاحظات:</strong> {{ payment.notes }}
+                    </p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- التواقيع -->
+        <div class="signatures mt-5">
+            <div class="row">
+                <div class="col-6">
+                    <div class="signature-box">
+                        <p>المستلم: ________________</p>
+                    </div>
+                </div>
+                <div class="col-6">
+                    <div class="signature-box">
+                        <p>توقيع الزبون: ________________</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    @media screen {
+        .receipt-container {
+            max-width: 800px;
+            margin: 20px auto;
+            padding: 20px;
+            border: 1px solid #ddd;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        .btn-print {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+        }
+    }
+
+    @media print {
+        .receipt-container {
+            width: 100%;
+            padding: 20px;
+        }
+        .btn-print {
+            display: none;
+        }
+    }
+
+    .company-name {
+        font-size: 24px;
+        font-weight: bold;
+        margin-bottom: 10px;
+    }
+
+    .company-info {
+        font-size: 14px;
+        margin-bottom: 20px;
+    }
+
+    .receipt-header {
+        border-bottom: 2px solid #ddd;
+        padding-bottom: 20px;
+    }
+
+    .receipt-details {
+        padding: 20px 0;
+    }
+
+    .amount-text {
+        font-size: 18px;
+        margin-bottom: 10px;
+    }
+
+    .amount-words {
+        font-style: italic;
+        color: #666;
+        margin-bottom: 20px;
+    }
+
+    .signature-box {
+        margin-top: 50px;
+        border-top: 1px solid #ddd;
+        padding-top: 10px;
+    }
+</style>
+
+<!-- زر الطباعة -->
+<button onclick="window.print()" class="btn btn-primary btn-print">
+    <i class="fas fa-print"></i> طباعة
+</button>
+{% endblock %}

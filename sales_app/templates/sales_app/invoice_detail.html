@@ -1,0 +1,105 @@
+{% extends 'sales_app/base.html' %}
+
+{% block title %}تفاصيل الفاتورة{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="card">
+        <div class="card-header">
+            <div class="row">
+                <div class="col">
+                    <h3 class="mb-0">فاتورة رقم: {{ invoice.id }}</h3>
+                </div>
+                <div class="col text-end">
+                    <a href="{% url 'sales_app:edit_invoice' invoice.id %}" class="btn btn-warning">
+                        <i class="fas fa-edit"></i> تعديل
+                    </a>
+                    <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#deleteModal">
+                        <i class="fas fa-trash"></i> حذف
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card-body">
+            <div class="row mb-4">
+                <div class="col-sm-6">
+                    <h6 class="mb-3">معلومات العميل:</h6>
+                    <div><strong>الاسم:</strong> {{ invoice.customer }}</div>
+                </div>
+                <div class="col-sm-6">
+                    <h6 class="mb-3">معلومات الفاتورة:</h6>
+                    <div><strong>التاريخ:</strong> {{ invoice.date|date:"Y-m-d" }}</div>
+                    <div><strong>الحالة:</strong> 
+                        {% if invoice.is_paid %}
+                            <span class="badge bg-success">مدفوع</span>
+                        {% else %}
+                            <span class="badge bg-warning">غير مدفوع</span>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <div class="table-responsive">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>المنتج</th>
+                            <th>الكمية</th>
+                            <th>السعر</th>
+                            <th>المجموع</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in invoice.items.all %}
+                        <tr>
+                            <td>{{ forloop.counter }}</td>
+                            <td>{{ item.product.name }}</td>
+                            <td>{{ item.quantity }}</td>
+                            <td>{{ item.price }}</td>
+                            <td>{{ item.get_subtotal }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                    <tfoot>
+                        <tr>
+                            <td colspan="4" class="text-end"><strong>المجموع الكلي:</strong></td>
+                            <td><strong>{{ invoice.get_total }}</strong></td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+
+            {% if invoice.notes %}
+            <div class="mt-4">
+                <h6>ملاحظات:</h6>
+                <p>{{ invoice.notes }}</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Delete Modal -->
+    <div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="deleteModalLabel">تأكيد الحذف</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    هل أنت متأكد من حذف الفاتورة رقم {{ invoice.id }}؟
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+                    <form action="{% url 'sales_app:delete_invoice' invoice.id %}" method="post" style="display: inline;">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-danger">حذف</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

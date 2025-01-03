@@ -1,0 +1,146 @@
+{% extends "sales_app/base.html" %}
+
+{% block title %}إعدادات الفواتير{% endblock %}
+
+{% block content %}
+<style>
+    body {
+        line-height: 1.6;
+        margin: 0;
+        padding: 0;
+        background-color: #f4f4f4;
+    }
+
+    .container {
+        max-width: 800px;
+        margin: 30px auto;
+        background: #fff;
+        border-radius: 8px;
+        padding: 20px;
+    }
+
+    .header {
+        text-align: center;
+        color: #3498db;
+        padding: 15px;
+        border-radius: 8px 8px 0 0;
+    }
+
+    .header h5 {
+        margin: 0;
+        font-size: 1.2rem;
+    }
+
+    label {
+        font-weight: bold;
+        margin-bottom: 5px;
+        display: block;
+    }
+
+    input, textarea, button {
+        width: 100%;
+        padding: 10px;
+        margin-bottom: 15px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        font-size: 1rem;
+    }
+
+    input:focus, textarea:focus, button:focus {
+        outline: none;
+        border-color: #3498db;
+    }
+
+    textarea {
+        resize: vertical;
+    }
+
+    .submit-btn {
+        background-color: #3498db;
+        color: white;
+        border: none;
+        font-size: 1rem;
+        cursor: pointer;
+        transition: background-color 0.3s;
+    }
+
+    .submit-btn:hover {
+        background-color: #2980b9;
+    }
+
+    .form-group {
+        margin-bottom: 15px;
+        width: 100%;
+    }
+    .flex-group {
+        display: flex;
+        gap: 15px;
+        width: 100%;
+    }
+
+</style>
+<div class="container">
+    {% if messages %}
+    {% for message in messages %}
+    <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+        {{ message }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+    {% endfor %}
+    {% endif %}
+    <div class="header">
+        <h5>إعدادات الفواتير </h5>
+    </div>
+    <form method="post">
+        {% csrf_token %}
+        
+        <!-- نسبة الضريبة -->
+        <div class="form-group">
+            <label for="tax_rate">نسبة الضريبة (%)</label>
+            <input type="number" 
+                   id="tax_rate" 
+                   name="tax_rate" 
+                   min="0"
+                   max="100"
+                   step="0.01"
+                   value="{{ settings.tax_rate|default:0 }}"
+                   placeholder="مثال: 15">
+        </div>
+
+        <!-- شروط الفاتورة -->
+        <div class="form-group">
+            <label for="invoice_terms" >شروط الفاتورة</label>
+            <textarea 
+                      id="invoice_terms" 
+                      name="invoice_terms" 
+                      rows="3"
+                      placeholder="شروط وأحكام الفاتورة">{{ settings.invoice_terms|default:'' }}</textarea>
+        </div>
+
+        <!-- ملاحظات الفاتورة -->
+        <div class="form-group">
+            <label for="invoice_notes">ملاحظات الفاتورة</label>
+            <textarea 
+                      id="invoice_notes" 
+                      name="invoice_notes" 
+                      rows="2"
+                      placeholder="ملاحظات تظهر في الفاتورة">{{ settings.invoice_notes|default:'' }}</textarea>
+        </div>
+
+        <!-- تذييل الفاتورة -->
+        <div class="form-group">
+            <label for="invoice_footer" >تذييل الفاتورة</label>
+            <textarea 
+                      id="invoice_footer" 
+                      name="invoice_footer" 
+                      rows="2"
+                      placeholder="نص يظهر في أسفل الفاتورة">{{ settings.invoice_footer|default:'' }}</textarea>
+        </div>
+
+        <!-- أزرار التحكم -->
+        <button type="submit" class="submit-btn">حفظ التغييرات</button>
+
+    </form>
+
+</div>
+{% endblock %}

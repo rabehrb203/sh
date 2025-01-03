@@ -1,0 +1,110 @@
+{% extends 'sales_app/base.html' %}
+
+{% block title %}
+    {% if form.instance.pk %}
+        تعديل منتج
+    {% else %}
+        إضافة منتج
+    {% endif %}
+{% endblock %}
+
+{% block content %}
+<style>
+    .container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 20px;
+    }
+
+    .card-body {
+        background: white;
+        overflow: hidden;
+        border-radius: 6px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        padding: 2rem;
+    }
+
+    .form-label {
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+        display: inline-block;
+    }
+
+    .form-control {
+        padding: 0.6rem;
+        border: 1px solid #ddd;
+        border-radius: 6px;
+    }
+
+    .btn-primary, .btn-secondary {
+        padding: 0.6rem 1.2rem;
+        border-radius: 6px;
+        text-transform: uppercase;
+    }
+
+    .btn-primary {
+        width: 100%;
+        background-color: #3498db;
+        color: white;
+        border: none;
+        transition: background-color 0.3s;
+    }
+
+    .btn-primary:hover {
+        background-color: #2980b9;
+    }
+
+    .btn-secondary {
+        width: 100%;
+
+        background-color: #e74c3c;
+        color: white;
+        border: none;
+    }
+
+    .btn-secondary:hover {
+        background-color: #c0392b;
+    }
+    .flex-group{
+        display: flex;
+        justify-content: space-between;
+    }
+</style>
+
+<div class="container">
+    <div class="card-body">
+        <h2 class="text-center mb-4">
+            {% if form.instance.pk %}
+                <i class="fas fa-edit"></i> تعديل منتج: {{ form.instance.name }}
+            {% else %}
+                <i class="fas fa-plus-circle"></i> إضافة منتج جديد
+            {% endif %}
+        </h2>
+
+        <form method="post" class="needs-validation" novalidate>
+            {% csrf_token %}
+            {% for field in form %}
+            <div class="mb-4">
+                <label for="{{ field.id_for_label }}" class="form-label">{{ field.label }}</label>
+                {{ field }}
+                {% if field.help_text %}
+                <small class="form-text text-muted">{{ field.help_text }}</small>
+                {% endif %}
+                {% if field.errors %}
+                <small class="text-danger">{{ field.errors }}</small>
+                {% endif %}
+            </div>
+            {% endfor %}
+
+            <div class="d-flex justify-content-between">
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-save"></i> حفظ
+                </button>
+                <a href="{% url 'sales_app:product_list' %}" class="btn btn-secondary">
+                    <i class="fas fa-times"></i> إلغاء
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

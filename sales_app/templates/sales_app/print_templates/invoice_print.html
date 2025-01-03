@@ -1,0 +1,199 @@
+{% extends 'sales_app/print_templates/base_print.html' %}
+{% load static %}
+
+{% block title %}طباعة السند #{{ invoice.id }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .company-logo {
+        max-width: 200px;
+        height: auto;
+    }
+
+    .invoice-title {
+        font-size: 24px;
+        color: #333;
+        margin-bottom: 10px;
+    }
+
+    .invoice-details-table {
+        width: 100%;
+        margin-bottom: 20px;
+    }
+
+    .invoice-details-table td {
+        padding: 5px;
+    }
+
+    .items-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-bottom: 30px;
+    }
+
+    .items-table th,
+    .items-table td {
+        border: 1px solid var(--border-color);
+        padding: 8px;
+        text-align: right;
+    }
+
+    .items-table th {
+        background-color: #f8f9fa;
+    }
+
+    .totals-table {
+        width: 40%;
+        margin-left: auto;
+        margin-bottom: 30px;
+    }
+
+    .totals-table td {
+        padding: 5px;
+        text-align: right;
+    }
+
+    .totals-table .total-row {
+        font-weight: bold;
+        border-top: 2px solid var(--border-color);
+    }
+
+    .notes {
+        margin: 20px 0;
+        padding: 10px;
+        background-color: #f8f9fa;
+        border-radius: 4px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Print Button -->
+<div class="no-print mb-3">
+    <button onclick="window.print()" class="btn btn-primary">
+        <i class="fas fa-print"></i> طباعة السند
+    </button>
+    <a href="{% url 'sales_app:invoice_list' %}" class="btn btn-secondary">
+        <i class="fas fa-arrow-right"></i> عودة للقائمة
+    </a>
+</div>
+
+<!-- Watermark -->
+<div class="watermark">نسخة أصلية</div>
+
+<!-- Header -->
+<div class="print-header row">
+    <div class="col-6">
+        <img src="{% static 'sales_app/images/logo.png' %}" alt="Company Logo" class="company-logo">
+    </div>
+    <div class="col-6 text-start">
+        <h1 class="invoice-title">سند قبض</h1>
+        <p>رقم السند: {{ invoice.id }}</p>
+        <p>التاريخ: {{ invoice.date|date:"Y/m/d" }}</p>
+    </div>
+</div>
+
+<!-- Customer Details -->
+<div class="row mb-4">
+    <div class="col-6">
+        <table class="invoice-details-table">
+            <tr>
+                <td><strong>السيد/ة:</strong></td>
+                <td>{{ invoice.customer.name }}</td>
+            </tr>
+            <tr>
+                <td><strong>العنوان:</strong></td>
+                <td>{{ invoice.customer.address }}</td>
+            </tr>
+            <tr>
+                <td><strong>الهاتف:</strong></td>
+                <td>{{ invoice.customer.phone }}</td>
+            </tr>
+        </table>
+    </div>
+</div>
+
+<!-- Items Table -->
+<div class="row">
+    <div class="col-12">
+        <table class="items-table">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>المنتج</th>
+                    <th>الكمية</th>
+                    <th>السعر</th>
+                    <th>المجموع</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in invoice.items.all %}
+                <tr>
+                    <td>{{ forloop.counter }}</td>
+                    <td>{{ item.product.name }}</td>
+                    <td>{{ item.quantity }}</td>
+                    <td>{{ item.price }} ₪</td>
+                    <td>{{ item.total }} ₪</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Totals -->
+<div class="row">
+    <div class="col-12">
+        <table class="totals-table">
+            <tr>
+                <td><strong>المجموع قبل الضريبة:</strong></td>
+                <td>{{ invoice.subtotal }} ₪</td>
+            </tr>
+            {% if not invoice.tax_exempt %}
+            <tr>
+                <td><strong>ضريبة القيمة المضافة ({{ tax_rate }}%):</strong></td>
+                <td>{{ invoice.tax_amount }} ₪</td>
+            </tr>
+            {% endif %}
+            <tr class="total-row">
+                <td><strong>المجموع النهائي:</strong></td>
+                <td>{{ invoice.total }} ₪</td>
+            </tr>
+        </table>
+    </div>
+</div>
+
+<!-- Notes -->
+{% if invoice.notes %}
+<div class="row">
+    <div class="col-12">
+        <div class="notes">
+            <strong>ملاحظات:</strong>
+            <p>{{ invoice.notes }}</p>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Signature Section -->
+<div class="signature-section">
+    <div class="signature-box">
+        <p>توقيع المستلم</p>
+    </div>
+    <div class="signature-box">
+        <p>توقيع المحاسب</p>
+    </div>
+    <div class="signature-box">
+        <p>ختم الشركة</p>
+    </div>
+</div>
+
+<!-- Footer -->
+<div class="print-footer">
+    <p>شكراً لتعاملكم معنا</p>
+    <small>{{ company_name }} - {{ company_address }} - هاتف: {{ company_phone }}</small>
+</div>
+
+<!-- QR Code -->
+<img src="data:image/png;base64,{{ qr_code }}" alt="QR Code" class="qr-code">
+{% endblock %}

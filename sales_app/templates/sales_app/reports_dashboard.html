@@ -1,0 +1,68 @@
+{% extends 'sales_app/base.html' %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <h2 class="mb-4">لوحة التقارير</h2>
+    
+    <div class="row">
+        <!-- إجمالي المبيعات -->
+        <div class="col-md-4 mb-4">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">إجمالي المبيعات</h5>
+                    <h2 class="card-text text-primary">{{ total_sales|floatformat:2 }} ر.س</h2>
+                </div>
+            </div>
+        </div>
+        
+        <!-- إجمالي المستلم -->
+        <div class="col-md-4 mb-4">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">إجمالي المستلم</h5>
+                    <h2 class="card-text text-success">{{ total_received|floatformat:2 }} ر.س</h2>
+                </div>
+            </div>
+        </div>
+        
+        <!-- إجمالي المتبقي -->
+        <div class="col-md-4 mb-4">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">إجمالي المتبقي</h5>
+                    <h2 class="card-text text-danger">{{ total_pending|floatformat:2 }} ر.س</h2>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row mt-4">
+        <!-- المنتجات الأكثر مبيعاً -->
+        <div class="col-md-6 mb-4">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">المنتجات الأكثر مبيعاً</h5>
+                    <div class="table-responsive">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>المنتج</th>
+                                    <th>الكمية المباعة</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for product in top_products %}
+                                <tr>
+                                    <td>{{ product.product__name }}</td>
+                                    <td>{{ product.total_quantity }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

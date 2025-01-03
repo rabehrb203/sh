@@ -1,0 +1,594 @@
+{% extends 'sales_app/base.html' %}
+{% block title %}سندات القبض{% endblock %}
+{% block content %}
+<style>
+    .container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 20px;
+    }
+
+    .header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 2rem;
+    }
+
+    .add-button {
+        background-color: #3498db;
+        color: white;
+        padding: 0.6rem 1.2rem;
+        border-radius: 6px;
+        text-decoration: none;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        transition: background-color 0.3s;
+    }
+
+    .add-button:hover {
+        background-color: #2980b9;
+    }
+
+    .filters {
+        background: white;
+        padding: 1.5rem;
+        border-radius: 6px;
+        margin-bottom: 1.5rem;
+        border: 1px solid #eee;
+    }
+
+    .filters-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1rem;
+    }
+
+    .form-group {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .form-group label {
+        font-weight: 500;
+        color: #2c3e50;
+    }
+
+    .form-control {
+        padding: 0.5rem;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+    }
+
+    .date-group {
+        display: flex;
+        gap: 0.5rem;
+    }
+
+    .search-btn {
+        background-color: #3498db;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        padding: 0.5rem;
+        cursor: pointer;
+        height: 38px;
+        width: 100%;
+        margin-top: 1.5rem;
+    }
+
+    .card-body {
+        background: white;
+        overflow: hidden;
+    }
+
+    .table-container {
+        overflow-x: auto;
+    }
+
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        text-align: right;
+    }
+
+    th {
+        background-color: #f8f9fa;
+        color: #2c3e50;
+        padding: 1rem;
+        font-weight: 600;
+        border-bottom: 2px solid #eee;
+    }
+
+    td {
+        padding: 1rem;
+        border-bottom: 1px solid #eee;
+        color: #444;
+    }
+
+    tr:hover {
+        background-color: #f8f9fa;
+    }
+
+    .action-buttons {
+        display: flex;
+        gap: 8px;
+        justify-content: center;
+    }
+
+    .btn {
+        padding: 0.4rem 0.8rem;
+        border-radius: 4px;
+        border: none;
+        cursor: pointer;
+        transition: opacity 0.3s;
+    }
+
+    .btn:hover {
+        opacity: 0.9;
+    }
+
+    .btn-warning {
+        background-color: #ffc107;
+        color: #333;
+    }
+
+    .btn-info {
+        background-color: #00bcd4;
+        color: white;
+    }
+
+    .btn-primary {
+        background-color: #3498db;
+        color: white;
+    }
+
+    .pagination {
+        display: flex;
+        justify-content: center;
+        gap: 5px;
+        margin-top: 2rem;
+        list-style: none;
+        padding: 0;
+    }
+
+    .pagination a {
+        color: #3498db;
+        padding: 8px 12px;
+        text-decoration: none;
+        border: 1px solid #eee;
+        border-radius: 4px;
+        transition: all 0.3s;
+    }
+
+    .pagination a:hover {
+        background-color: #f8f9fa;
+    }
+
+    .pagination .active a {
+        background-color: #3498db;
+        color: white;
+        border-color: #3498db;
+    }
+
+    @media (max-width: 768px) {
+        .filters-grid {
+            grid-template-columns: 1fr;
+        }
+        
+        .date-group {
+            flex-direction: column;
+        }
+    }
+
+
+        .container-print {
+        width: 100%;
+        max-width: 800px;
+        margin: 0 auto;
+        font-family: 'Cairo', sans-serif;
+        background-color: #fff;
+        padding: 20px;
+        border: 1px solid #f1f1f1;
+        
+    }
+    .container-print {
+        display: none;
+    }
+    .receipt-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+        border-bottom: 2px solid #3498db;
+        padding-bottom: 10px;
+    }
+
+    .receipt-header h3 {
+        font-size: 24px;
+        color: #3498db;
+        margin: 0;
+    }
+
+    .serial-number {
+        font-size: 18px;
+        color: #888;
+        font-weight: bold;
+    }
+
+    /* تنسيق المعلومات داخل السند */
+    .receipt-body {
+        margin-top: 20px;
+    }
+
+    .info-row {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 15px;
+    }
+
+    .info-item {
+        font-size: 16px;
+        color: #555;
+    }
+
+    .info-item .label {
+        font-weight: bold;
+        color: #333;
+    }
+
+    .info-item span {
+        color: #3498db;
+    }
+
+    /* تنسيق المبلغ بالحروف */
+    .info-row #amount-in-words {
+        font-size: 18px;
+        font-weight: bold;
+        margin-top: 10px;
+    }
+
+    /* تنسيق التوقيعات */
+    .signatures-section {
+        margin-top: 40px;
+        display: flex;
+        justify-content: space-between;
+        padding-top: 30px;
+        border-top: 2px solid #ddd;
+    }
+
+    .signature-box {
+        text-align: center;
+    }
+
+    .signature-line {
+        width: 100px;
+        height: 2px;
+        background-color: #3498db;
+        margin-top: 5px;
+        margin-bottom: 15px;    
+    }
+
+    /* تنسيق QR code */
+    .qrcode-section {
+        margin-top: 30px;
+        text-align: center;
+    }
+
+    .qrcode-section img {
+        width: 120px;
+        height: 120px;
+        margin-top: 10px;
+    }
+    @media print {
+        @page {
+        size: A4;
+        margin: 0;
+       }
+
+    body {
+        margin: 0;
+        padding: 0;
+        background-color: #fff;
+    }
+    #sidebar {
+                display: none;
+            }
+            
+            #content {
+                margin: 0;
+                padding: 10px;
+            }
+        .no-print {
+            display: none !important;
+        }
+        .container-print {
+            display: block;
+        }
+        .print-header{
+            display:flex;
+            text-align: center;
+            margin-bottom: 20px;
+            background-color: #3498db;
+            width: 30%;
+            color: white;
+            padding: 6px;
+            border-radius: 8px 0 0 8px;
+            justify-content: space-around;
+            align-items: center;
+        }
+        .logo {
+            margin-top: 16px;
+            display: block;
+        }
+        .container{
+            display: none  ;
+        }
+        .container-print{
+            display: block  ;
+        }
+    }
+</style>
+
+<div class="container">
+    <div class="header">
+        <a href="{% url 'sales_app:add_receivable' %}" class="add-button">
+            <i class="fas fa-plus"></i> إضافة سند قبض
+        </a>
+        <a href="{% url 'sales_app:payment_receipt_report' %}" class="add-button">
+            <i class="fas fa-file-alt"></i> تقرير سندات القبض
+        </a>
+    </div>
+
+    <form method="get" class="filters">
+        <div class="filters-grid">
+            <div class="form-group">
+                <label>البحث</label>
+                <input type="text" name="search" class="form-control" placeholder="البحث عن طريق رقم السند..." value="{{ search_query }}">
+            </div>
+            <div class="form-group">
+                <label>طريقة الدفع</label>
+                <select name="payment_method" class="form-control">
+                    <option value="">الكل</option>
+                    <option value="cash" {% if payment_method == 'cash' %}selected{% endif %}>نقداً</option>
+                    <option value="card" {% if payment_method == 'card' %}selected{% endif %}>بطاقة ائتمان</option>
+                    <option value="transfer" {% if payment_method == 'transfer' %}selected{% endif %}>تحويل بنكي</option>
+                    <option value="check" {% if payment_method == 'check' %}selected{% endif %}>شيك</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>التاريخ</label>
+                <div class="date-group">
+                    <input type="date" name="date_from" class="form-control" value="{{ date_from }}" placeholder="من">
+                    <input type="date" name="date_to" class="form-control" value="{{ date_to }}" placeholder="إلى">
+                </div>
+            </div>
+            <div class="form-group">
+                <button type="submit" class="search-btn">
+                    <i class="fas fa-search"></i> بحث
+                </button>
+            </div>
+        </div>
+    </form>
+
+    <div class="card-body">
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>رقم السند</th>
+                        <th>التاريخ</th>
+                        <th>اسم الزبون</th>
+                        <th>المبلغ</th>
+                        <th>طريقة الدفع</th>
+                        <th>الإجراءات</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for receivable in receivables %}
+                    <tr>
+                        <td>{{ receivable.id }}</td>
+                        <td>{{ receivable.date|date:"Y-m-d" }}</td>
+                        <td>{{ receivable.customer.name|default:"-" }}</td>
+                        <td>{{ receivable.amount }} ₪</td>
+                        <td>{{ receivable.get_payment_method_display }}</td>
+                        <td class="action-buttons">
+                            <a href="{% url 'sales_app:edit_receivable' receivable.pk %}" class="btn btn-warning">
+                                <i class="fas fa-edit"></i>
+                            </a>
+                            <a href="{% url 'sales_app:receivable_detail' receivable.pk %}" class="btn btn-info">
+                                <i class="fas fa-eye"></i>
+                            </a>
+                            <button onclick="printReceivable('{{ receivable.id }}', '{{ receivable.customer.name|escapejs }}', '{{ receivable.get_payment_method_display|escapejs }}', '{{ receivable.amount }}', '{{ receivable.date}}')" class="btn btn-primary">
+                                <i class="fas fa-print"></i>
+                            </button>
+                            
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" class="text-center">لا توجد سندات قبض</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    {% if receivables.has_other_pages %}
+    <nav>
+        <ul class="pagination">
+            {% if receivables.has_previous %}
+            <li>
+                <a href="?page={{ receivables.previous_page_number }}">السابق</a>
+            </li>
+            {% endif %}
+            
+            {% for num in receivables.paginator.page_range %}
+            <li class="{% if receivables.number == num %}active{% endif %}">
+                <a href="?page={{ num }}">{{ num }}</a>
+            </li>
+            {% endfor %}
+            
+            {% if receivables.has_next %}
+            <li>
+                <a href="?page={{ receivables.next_page_number }}">التالي</a>
+            </li>
+            {% endif %}
+        </ul>
+    </nav>
+    {% endif %}
+</div>
+
+
+<div class="container-print" id="printable-content">
+    <div class="receipt-border">
+        <div class="receipt-content">
+            <!-- ترويسة السند -->
+            <div class="receipt-header">
+                <h3 class="text-center mb-0">سند قبض</h3>
+                <div class="serial-number" id="serial-number1">#{{ receivable.id }}</div>
+            </div>
+
+            <!-- محتوى السند -->
+            <div class="receipt-body">
+                <!-- المعلومات الرئيسية -->
+                <div class="info-row">
+                    <div class="info-item"><span class="label" id="date">التاريخ:</span> {{ receivable.date|date:"Y-m-d" }}</div>
+                    <div class="info-item"><span class="label" id="serial-number2">رقم السند:</span> {{ receivable.id }}</div>
+                </div>
+                
+                <div class="info-row">
+                    <div class="info-item" ><span class="label" id="customer-name">استلمنا من السيد/ة:</span></div>
+        
+                </div>
+
+                <div class="info-row">
+                    <div class="info-item"><span class="label" id="payment-method" >طريقة الدفع:</span></div>
+                    <div class="info-item"><span class="label" id="amount">مبلغ وقدره:</span></div>
+                </div>
+
+                <div class="info-row">
+                    <div class="info-item"><span class="label" id="amount-in-words">المبلغ بالحروف:</span> <span id="amount-in-words"></span></div>
+                </div>
+
+                <!-- قسم التوقيعات -->
+                <div class="signatures-section">
+                    <div class="signature-box">
+                        <p>توقيع المستلم</p>
+                        <div class="signature-line"></div>
+                        <span style="margin-top: 5px;">×</span>
+
+                    </div>
+                    <div class="signature-box">
+                        <p>توقيع الزبون</p>
+                        <div class="signature-line"></div>
+                        <span style="margin-top: 5px;">×</span>
+                    
+                        
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% block extra_js %}
+<script>
+function printReceivable(id, customer_name, payment_method, amount, date) {
+    if (!id || !customer_name || !payment_method || !amount) {
+        return;
+    }
+
+    // document.getElementById('amount-in-words').innerText = convertAmountToWords(amount); // تحويل المبلغ إلى حروف
+
+    document.getElementById('serial-number1').innerText = "#"+id;
+    document.getElementById('serial-number2').innerText = "رقم السند: "+id;
+    
+    document.getElementById('customer-name').innerText = "استلمنا من السيد/ة: "+ customer_name;
+    document.getElementById('payment-method').innerText = "طريقة الدفع: "+ payment_method;
+    document.getElementById('amount').innerText = "مبلغ وقدره: "+ amount + " ₪";
+
+    // تحويل المبلغ إلى حروف
+    document.getElementById('amount-in-words').innerText = "المبلغ بالحروف: " + convertToArabicWords(amount);
+
+
+    var date = new Date('2024-07-27');  // استبدل هذا بـ receivable.date
+    var arabicDate = new Intl.DateTimeFormat('ar-EG', {
+                    weekday: 'long', // اليوم (مثل: الإثنين)
+                    day: 'numeric', // اليوم من الشهر (مثل: 27)
+                    month: 'long',  // الشهر (مثل: يوليو)
+                    year: 'numeric' // السنة (مثل: 2024)
+                }).format(date);
+
+    document.getElementById('date').innerText = "التاريخ: " + date.toLocaleDateString('ar-EG', { day: 'numeric', month: 'long', year: 'numeric' });
+
+
+
+    
+
+
+
+    window.print();
+}
+
+function convertToArabicWords(amount) {
+    const ones = ["", "واحد", "اثنان", "ثلاثة", "أربعة", "خمسة", "ستة", "سبعة", "ثمانية", "تسعة"];
+    const tens = ["", "عشرة", "عشرون", "ثلاثون", "أربعون", "خمسون", "ستون", "سبعون", "ثمانون", "تسعون"];
+    const hundreds = ["", "مائة", "مئتان", "ثلاثمائة", "أربعمائة", "خمسمائة", "ستمائة", "سبعمائة", "ثمانمائة", "تسعمائة"];
+    
+    if (amount === 0) return "صفر";
+
+    let words = "";
+    const numAmount = Math.floor(amount); // الجزء الصحيح من الرقم
+    
+    // التعامل مع الآلاف
+    if (numAmount >= 1000) {
+        const thousands = Math.floor(numAmount / 1000);
+        if (thousands === 1) words += "ألف ";
+        else if (thousands === 2) words += "ألفان ";
+        else words += ones[thousands] + " آلاف ";
+        amount = numAmount % 1000;
+    }
+    
+    // التعامل مع المئات
+    if (amount >= 100) {
+        words += hundreds[Math.floor(amount / 100)] + " ";
+        amount %= 100;
+    }
+    
+    // التعامل مع العشرات والآحاد
+    if (amount > 0) {
+        if (amount < 10) {
+            words += ones[amount];
+        } else if (amount === 10) {
+            words += "عشرة";
+        } else if (amount < 20) {
+            words += ones[amount % 10] + " عشر";
+        } else {
+            if (amount % 10 !== 0) {
+                words += ones[amount % 10] + " و";
+            }
+            words += tens[Math.floor(amount / 10)];
+        }
+    }
+    
+    words = words.trim();
+    
+    // الآن نتعامل مع الجزء العشري
+    const decimalPart = amount % 1;  // الجزء العشري
+    if (decimalPart > 0) {
+        words += " و ";
+        const decimalWords = (decimalPart * 100).toFixed(0); // نحول الجزء العشري إلى عدد صحيح
+        words += convertToArabicWords(parseInt(decimalWords)) + " جزء من المئة";
+    }
+    
+    return words.trim() + " شيكل فقط لا غير";
+}
+
+
+
+</script>
+{% endblock %}
+{% endblock %}

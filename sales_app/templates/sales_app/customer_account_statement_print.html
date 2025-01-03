@@ -1,0 +1,189 @@
+{% extends 'sales_app/base.html' %}
+{% load static %}
+
+{% block title %}كشف الحساب{% endblock %}
+
+{% block content %}
+<div class="container mt-4" id="printable-content">
+    <div class="receipt-border">
+        <div class="receipt-content">
+            <!-- ترويسة كشف الحساب -->
+            <div class="receipt-header">
+                <h3 class="text-center mb-0">كشف الحساب</h3>
+                <div class="serial-number">#{{ customer.id }}</div>
+            </div>
+
+            <!-- محتوى كشف الحساب -->
+            <div class="receipt-body">
+                <!-- المعلومات الرئيسية -->
+                <div class="info-row">
+                    <div class="info-item"><span class="label">اسم الزبون:</span> {{ customer.name }}</div>
+                    <div class="info-item"><span class="label">تاريخ الكشف:</span> {{ current_date }}</div>
+                    <div class="info-item"><span class="label">مجموع الفواتير:</span> {{ total_amount }} ₪</div>
+                </div>
+
+                <table style="width: 100%; border-collapse: collapse;">
+                    <thead>
+                        <tr>    
+                            
+                            <th style="border: 1px solid #3498db; background-color: #5aa9dd; text-align: center; color: #fff; padding: 8px;">#</th>
+                            <th style="border: 1px solid #3498db; background-color: #5aa9dd; text-align: center; color: #fff; padding: 8px;">رقم الفاتورة</th>
+                            <th style="border: 1px solid #3498db; background-color: #5aa9dd; text-align: center; color: #fff; padding: 8px;">تاريخ الفاتورة</th>
+                            <th style="border: 1px solid #3498db; background-color: #5aa9dd; text-align: center; color: #fff; padding: 8px;">المبلغ</th>
+                            <th style="border: 1px solid #3498db; background-color: #5aa9dd; text-align: center; color: #fff; padding: 8px;">الحالة</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for transaction in transactions %}
+                        <tr>
+                            <td style="border: 1px solid #3498db; padding: 8px; text-align: center;">{{ forloop.counter }}</td>
+                            <td style="border: 1px solid #3498db; padding: 8px;">{{ transaction.reference }}</td>
+                            <td style="border: 1px solid #3498db; padding: 8px;">{{ transaction.date|date:"Y-m-d" }}</td>
+                            <td style="border: 1px solid #3498db; padding: 8px;">{{ transaction.debit|floatformat:2 }} ₪</td>
+                            <td style="border: 1px solid #3498db; padding: 8px;">{{ transaction.status }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+
+                <!-- قسم التوقيعات -->
+                <div class="signatures-section">
+                    <div class="signature-box">
+                        <p>توقيع المستلم</p>
+                        <div class="signature-line"></div>
+                    </div>
+                    <div class="signature-box">
+                        <p>توقيع الزبون</p>
+                        <div class="signature-line"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap');
+
+/* إعدادات عامة */
+body {
+    font-family: 'Cairo', sans-serif;
+    line-height: 1.6;
+    direction: rtl;
+    margin: 0;
+}
+
+/* ترويسة كشف الحساب */
+.receipt-border {
+    border: 2px solid #3498db;
+    padding: 30px;
+    margin: 20px auto;
+    max-width: 800px;
+    background: #fff;
+    box-shadow: 0 0 15px rgba(52, 152, 219, 0.1);
+}
+
+.receipt-header {
+    background: linear-gradient(135deg, #3498db, #2980b9);
+    padding: 20px;
+    position: relative;
+    margin-bottom: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+.serial-number {
+    margin-top: 5px;
+    color: #ffffff;
+    font-weight: 600;
+    direction: ltr;
+}
+
+.receipt-header h3 {
+    color: #ffffff;
+    font-weight: 700;
+    font-size: 24px;
+    margin: 0;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+/* محتوى كشف الحساب */
+.receipt-body {
+    padding: 20px;
+}
+
+.info-row {
+    width: 50%;
+    margin-bottom: 20px;
+    padding: 15px;
+    background-color: #f8f9fa;
+}
+
+.info-item {
+    margin-bottom: 10px;
+    font-size: 16px;
+}
+
+.label {
+    font-weight: 600;
+    color: #3498db;
+    margin-left: 8px;
+}
+
+/* قسم التوقيعات */
+.signatures-section {
+    margin-top: 40px;
+    border-top: 2px dashed #e2e8f0;
+    padding-top: 20px;
+}
+
+.signature-box {
+    text-align: center;
+    padding: 15px;
+}
+
+.signature-box p {
+    color: #2c3e50;
+    font-weight: 600;
+    margin-bottom: 10px;
+}
+
+.signature-line {
+    width: 80%;
+    margin: 10px auto;
+    border-bottom: 2px solid #3498db;
+    position: relative;
+}
+
+.signature-line::after {
+    content: '×';
+    position: absolute;
+    right: 0;
+    bottom: 5px;
+    color: #95a5a6;
+    font-size: 14px;
+}
+
+/* إعدادات الطباعة */
+@media print {
+    @page {
+        size: A4;
+        margin: 0;
+    }
+
+    body {
+        margin: 0;
+        padding: 0;
+    }
+
+    .receipt-border {
+        margin: 0;
+        padding: 30px;
+        border: none;
+        box-shadow: none;
+    }
+}
+</style>
+{% endblock %}

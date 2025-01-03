@@ -1,0 +1,206 @@
+{% extends 'sales_app/base.html' %}
+
+{% block title %}
+    {% if edit_mode %}
+        تعديل سند قبض
+    {% else %}
+        إضافة سند قبض
+    {% endif %}
+{% endblock %}
+
+{% block content %}
+<style>
+    .container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 20px;
+    }
+
+    .card-body {
+        background: white;
+        overflow: hidden;
+        border-radius: 8px;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        padding: 2rem;
+    }
+
+    h2 {
+        text-align: center;
+        margin-bottom: 2rem;
+        font-size: 1.5rem;
+    }
+
+    .form-label {
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+        display: inline-block;
+    }
+
+    .form-control, .input-group input {
+        width: 100%;
+        padding: 0.6rem;
+        border: 1px solid #ddd;
+        border-radius: 6px;
+        box-sizing: border-box;
+    }
+
+    .input-group {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .input-group .btn {
+        background-color: #3498db;
+        color: white;
+        padding: 0.6rem 1rem;
+        border: 1px solid #ddd;
+        border-radius: 6px;
+        transition: background-color 0.3s;
+        text-align: center;
+        cursor: pointer;
+    }
+
+    .input-group .btn:hover {
+        background-color: #2980b9;
+    }
+
+    .btn-primary, .btn-secondary {
+        padding: 0.6rem 1.2rem;
+        border-radius: 6px;
+        text-transform: uppercase;
+        display: inline-block;
+        width: 100%;
+        text-align: center;
+        cursor: pointer;
+    }
+
+    .btn-primary {
+        background-color: #3498db;
+        color: white;
+        border: none;
+    }
+
+    .btn-primary:hover {
+        background-color: #2980b9;
+    }
+
+    .btn-secondary {
+        background-color: #e74c3c;
+        color: white;
+        border: none;
+    }
+
+    .btn-secondary:hover {
+        background-color: #c0392b;
+    }
+
+    .form-text {
+        margin-top: 0.5rem;
+        font-size: 0.9rem;
+        color: #6c757d;
+    }
+
+    .alert {
+        background-color: #f8d7da;
+        color: #721c24;
+        padding: 0.75rem 1.25rem;
+        border-radius: 6px;
+        margin-top: 0.5rem;
+    }
+
+    .alert-danger {
+        border: 1px solid #f5c6cb;
+    }
+
+    .d-flex {
+        display: flex;
+        justify-content: space-between;
+    }
+
+    .mb-4 {
+        margin-bottom: 1.5rem;
+    }
+    .form-group{
+        width: 100%;
+        margin: 0 5px;
+        
+    }
+</style>
+
+<div class="container">
+    <div class="card-body">
+        <h2>
+            {% if edit_mode %}
+                <i class="fas fa-edit"></i> تعديل سند قبض
+            {% else %}
+                <i class="fas fa-plus-circle"></i> إضافة سند قبض جديد
+            {% endif %}
+        </h2>
+
+        <form method="post" class="needs-validation" novalidate>
+            {% csrf_token %}
+            
+            <!-- Customer Field -->
+            <div class="mb-4">
+                <label for="{{ form.customer.id_for_label }}" class="form-label">الزبون</label>
+                <div class="input-group">
+                    {{ form.customer }}
+                    <a href="{% url 'sales_app:add_customer' %}" class="btn" target="_blank">
+                        <i class="fas fa-plus"></i>
+                    </a>
+                </div>
+                {% if form.customer.errors %}
+                <div class="alert alert-danger mt-1">
+                    {{ form.customer.errors }}
+                </div>
+                {% endif %}
+            </div>
+
+            <div style="display: flex; justify-content: space-between;">
+            <!-- Amount Field -->
+            <div class="form-group">
+                <label for="{{ form.amount.id_for_label }}" class="form-label">المبلغ</label>
+                {{ form.amount }}
+                {% if form.amount.errors %}
+                <div class="alert alert-danger mt-1">
+                    {{ form.amount.errors }}
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Payment Method Field -->
+            <div class="form-group">
+                <label for="{{ form.payment_method.id_for_label }}" class="form-label">طريقة الدفع</label>
+                {{ form.payment_method }}
+                {% if form.payment_method.errors %}
+                <div class="alert alert-danger mt-1">
+                    {{ form.payment_method.errors }}
+                </div>
+                {% endif %}
+            </div>
+        </div>
+            <!-- Date Field -->
+            <div class="mb-4">
+                <label for="{{ form.date.id_for_label }}" class="form-label">التاريخ</label>
+                {{ form.date }}
+                {% if form.date.errors %}
+                <div class="alert alert-danger mt-1">
+                    {{ form.date.errors }}
+                </div>
+                {% endif %}
+            </div>
+
+            <div class="d-flex">
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-save"></i> حفظ
+                </button>
+                <a href="{% url 'sales_app:receivable_list' %}" class="btn btn-secondary">
+                    <i class="fas fa-times"></i> إلغاء
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+{% endblock %}

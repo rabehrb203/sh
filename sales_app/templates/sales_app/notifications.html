@@ -1,0 +1,62 @@
+{% extends 'sales_app/base.html' %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <h2 class="mb-4">الإشعارات</h2>
+    
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-body">
+                    {% if notifications %}
+                    <div class="list-group">
+                        {% for notification in notifications %}
+                        <div class="list-group-item {% if not notification.is_read %}list-group-item-primary{% endif %}">
+                            <div class="d-flex w-100 justify-content-between">
+                                <h5 class="mb-1">{{ notification.title }}</h5>
+                                <small class="text-muted">{{ notification.created_at|date:"Y-m-d H:i" }}</small>
+                            </div>
+                            <p class="mb-1">{{ notification.message }}</p>
+                            <small class="text-muted">
+                                {% if notification.notification_type == 'invoice' %}
+                                <i class="fas fa-file-invoice me-1"></i>
+                                {% elif notification.notification_type == 'payment' %}
+                                <i class="fas fa-money-bill-wave me-1"></i>
+                                {% elif notification.notification_type == 'low_stock' %}
+                                <i class="fas fa-exclamation-triangle me-1"></i>
+                                {% else %}
+                                <i class="fas fa-info-circle me-1"></i>
+                                {% endif %}
+                                {{ notification.get_notification_type_display }}
+                            </small>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <p class="text-muted text-center">لا توجد إشعارات.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% block extra_js %}
+<script>
+    // تحديث حالة الإشعار عند قراءته
+    function markNotificationAsRead(notificationId) {
+        fetch(`/notifications/mark-read/${notificationId}/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+            },
+        }).then(response => {
+            if (response.ok) {
+                const notification = document.querySelector(`#notification-${notificationId}`);
+                notification.classList.remove('list-group-item-primary');
+            }
+        });
+    }
+</script>
+{% endblock %}
+{% endblock %}

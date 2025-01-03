@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+{% load static %}
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>تقرير المخزون</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet"> 
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        @font-face {
+            font-family: Cairo;
+            src: url('{% static "fonts/cairo.ttf" %}') format('truetype');
+            font-weight: normal;
+            font-style: normal;
+        }
+        body {
+            background-color: #f8f9fa;
+            padding: 20px;
+            font-family: Cairo, sans-serif;
+        }
+        .report-container {
+            background-color: white;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .table {
+            margin-top: 20px;
+        }
+
+        .low-stock {
+            color: #0088cc;
+        }
+        .out-of-stock {
+            color: #dc3545;
+        }
+        .report-header {
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        .report-date {
+            color: #6c757d;
+            margin-bottom: 20px;
+        }
+        .logo {
+            display: none;
+            max-width: 120px;
+            height: auto;
+            margin: 0 auto;
+        }
+        .table-header
+        {
+            
+            background-color:  #3498db;
+            color: white;
+        }
+
+        .table-footer{
+            background-color:  #3498db;
+            color: white;
+            font-weight: bold;
+        }
+        tr{
+            border-bottom: 1px solid #3498db;
+        }
+        td{
+            padding: 0.4rem;
+        }
+        .table>:not(:first-child) {
+            border-top: 1px solid #3498db;
+        }
+        .no-print {
+            display: block;
+            text-align: center;
+            margin-top: 20px;
+        }
+        .status-out {
+            color: #dc3545;
+        }
+        .status-low {
+            color: #0088cc;
+        }
+        .status-available {
+            color: #28a745;
+        }
+
+        .print-header{
+            display:none
+        }
+
+        @media print {
+            body {
+                background-color: white;
+                padding: 0;
+            }
+            .print-header{
+                display:flex;
+                text-align: center;
+                margin-bottom: 20px;
+                background-color: #3498db;
+                width: 30%;
+                color: white;
+                padding: 6px;
+                border-radius: 8px 0 0 8px;
+                justify-content: space-around;
+                align-items: center;
+            }
+            .logo {
+                margin-top: 16px;
+                display: block;
+            }
+            .report-container {
+                box-shadow: none;
+                padding: 0;
+            }
+            .no-print {
+                display: none !important;
+            }
+
+            .table-header{
+                background-color:  #3498db;
+                color: white;
+            }
+
+            .table-footer{
+                background-color:  #3498db;
+                color: white;
+                font-weight: bold;
+            }
+            tr{
+                border-bottom: 1px solid #3498db;
+            }
+            td, th{
+                padding: 0.4rem;
+            }
+            .table>:not(:first-child) {
+            border-top: 1px solid #3498db;
+            }
+            .low-stock {
+                color: #0088cc !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+            .out-of-stock {
+                color: #dc3545 !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+            .status-out {
+                color: #dc3545 !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+            .status-low {
+                color: #0088cc !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+            .status-available {
+                color: #28a745 !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+        }
+    </style>
+   
+</head>
+<body>
+    <div class="container report-container">
+        <div class="report-header">
+            <img style="flex:1" src="{% static 'images/logo.png' %}" alt="Logo" class="logo">
+            <h1 style="flex:1" class="mb-3">تقرير المخزون</h1>
+
+        </div>
+
+        <div class="no-print mb-3">
+            <button onclick="window.print()" class="btn btn-primary">
+                <i class="fas fa-print"></i> طباعة التقرير
+            </button>
+        </div>
+
+
+        <div class="table-responsive">
+            
+                <div class="print-header">
+                    <h7 class="invoice-title">تاريخ التقرير</h7>
+                    <h7>{{ report_date }}</h7>
+                </div>
+            <table class="table table-striped table-hover">
+                <thead class="table-header">
+                    <tr>
+                        <th>#</th>
+                        <th>اسم الصنف</th>
+                        <th>الكمية المتوفرة</th>
+                        <th>سعر الشراء</th>
+                        <th>القيمة الإجمالية</th>
+                        <th>حالة المخزون</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in inventory %}
+                    <tr {% if item.quantity <= 5 %}class="low-stock"{% endif %} 
+                        {% if item.quantity == 0 %}class="out-of-stock"{% endif %}>
+                        <td>{{ item.id }}</td>
+                        <td>{{ item.name }}</td>
+                        <td>{{ item.quantity }}</td>
+                        <td>{{ item.purchase_price }} ₪</td>
+                        <td>{{ item.total_value |floatformat:2 }}  ₪</td>
+                        <td>
+                            {% if item.quantity == 0 %}
+                                <span class="status-out">نفذ المخزون</span>
+                            {% elif item.quantity <= 5 %}
+                                <span class="status-low">مخزون منخفض</span>
+                            {% else %}
+                                <span class="status-available">متوفر</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+                <tfoot class="table-footer">
+                    <tr>
+                        <td colspan="4" class="text-start">إجمالي قيمة المخزون</td>
+                        <td>{{ total_inventory_value }} ₪</td>
+                        <td></td>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://kit.fontawesome.com/a076d05399.js"></script>
+</body>
+</html>
