@@ -47,4 +47,5 @@ urlpatterns = [
     path('sales-report/', views.sales_report, name='sales_report'),
     path('reports/payment-receipts/', views.payment_receipt_report, name='payment_receipt_report'),
     path('print_payment_receipt/<int:payment_id>/', views.print_payment_receipt, name='print_payment_receipt'),
+    path('invoice-items/<int:item_id>/delete/', views.delete_invoice_item, name='delete_invoice_item'),
 ]

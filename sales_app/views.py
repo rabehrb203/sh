@@ -178,6 +178,8 @@ def create_invoice(request):
             try:
                 with transaction.atomic():
                     invoice = form.save(commit=False)
+                    # تأكيد حفظ الإعفاء من الضريبة
+                    invoice.tax_exempt = form.cleaned_data.get('tax_exempt', False)
                     invoice.save()
                     
                     instances = formset.save(commit=False)
@@ -212,9 +214,11 @@ def create_invoice(request):
                     # تحديث المجموع
                     if invoice.tax_exempt:
                         invoice.total = subtotal
+                        invoice.tax_amount = Decimal('0')
                     else:
                         tax_amount = subtotal * (Decimal(str(tax_rate)) / 100)
                         invoice.total = subtotal + tax_amount
+                        invoice.tax_amount = tax_amount
                     
                     invoice.save()
                     
@@ -265,77 +269,36 @@ def edit_invoice(request, pk):
                     form_changed = form.has_changed()
                     formset_changed = False
                     
-                    # قائمة لتتبع التغييرات في الكميات
-                    quantity_changes = {}
+                    # تأكيد حفظ الإعفاء من الضريبة
+                    invoice.tax_exempt = form.cleaned_data.get('tax_exempt', invoice.tax_exempt)
                     
-                    # فحص التغييرات في العناصر الموجودة
-                    original_items = {item.id: item for item in invoice.items.all()}
+                    # إعادة حساب المجموع مع مراعاة الإعفاء الضريبي
+                    subtotal = sum(item.get_subtotal() for item in invoice.items.all())
                     
-                    for form in formset.forms:
-                        if form.instance.pk and not form.cleaned_data.get('DELETE', False):
-                            # عنصر موجود مسبقاً
-                            original_item = original_items.get(form.instance.pk)
-                            if original_item:
-                                if 'quantity' in form.changed_data:
-                                    formset_changed = True
-                                    new_quantity = form.cleaned_data['quantity']
-                                    quantity_difference = new_quantity - original_item.quantity
-                                    if quantity_difference != 0:
-                                        product_id = form.cleaned_data['product'].id
-                                        quantity_changes[product_id] = quantity_changes.get(product_id, 0) + quantity_difference
-                        
-                        elif not form.instance.pk and not form.cleaned_data.get('DELETE', False):
-                            # عنصر جديد
-                            formset_changed = True
-                            product_id = form.cleaned_data['product'].id
-                            quantity_changes[product_id] = quantity_changes.get(product_id, 0) + form.cleaned_data['quantity']
+                    if invoice.tax_exempt:
+                        invoice.total = subtotal
+                        invoice.tax_amount = Decimal('0')
+                    else:
+                        tax_amount = subtotal * (Decimal(str(settings.tax_rate)) / 100)
+                        invoice.total = subtotal + tax_amount
+                        invoice.tax_amount = tax_amount
                     
-                    # معالجة العناصر المحذوفة
-                    for form in formset.forms:
-                        if form.instance.pk and form.cleaned_data.get('DELETE', False):
-                            formset_changed = True
-                            product_id = form.instance.product_id
-                            quantity_changes[product_id] = quantity_changes.get(product_id, 0) - form.instance.quantity
-
-                    # إذا لم تكن هناك تغييرات، نقوم بإعادة التوجيه مباشرة
-                    if not form_changed and not formset_changed:
-                        messages.success(request, 'لم يتم إجراء أي تغييرات على الفاتورة.')
-                        return redirect('sales_app:invoice_list')
-
-                    # التحقق من توفر الكميات فقط للتغييرات الفعلية
-                    for product_id, quantity_change in quantity_changes.items():
-                        if quantity_change > 0:
-                            product = Product.objects.select_for_update().get(id=product_id)
-                            if product.quantity < quantity_change:
-                                messages.error(
-                                    request,
-                                    f'الكمية المطلوبة غير متوفرة في المخزون للمنتج {product.name}. '
-                                    f'الكمية المتوفرة: {product.quantity}'
-                                )
-                                raise ValidationError('Insufficient quantity')
-
-                    # تطبيق التغييرات على المخزون
-                    for product_id, quantity_change in quantity_changes.items():
-                        if quantity_change != 0:  # تطبيق التغييرات فقط إذا كان هناك تغيير فعلي
-                            product = Product.objects.select_for_update().get(id=product_id)
-                            product.quantity -= quantity_change
-                            product.save()
-
-                    # حفظ الفاتورة والعناصر
-                    invoice = form.save()
+                    invoice.save()
                     formset.save()
 
                     messages.success(request, 'تم تحديث الفاتورة بنجاح.')
                     return redirect('sales_app:invoice_list')
-
-            except ValidationError:
-                pass
+                    
             except Exception as e:
                 messages.error(request, f'حدث خطأ أثناء تحديث الفاتورة: {str(e)}')
     else:
-        form = InvoiceForm(instance=invoice)
+        # عند فتح نموذج التعديل، تأكد من تمرير القيمة الحالية للإعفاء الضريبي
+        initial_data = {
+            'tax_exempt': invoice.tax_exempt
+        }
+        form = InvoiceForm(instance=invoice, initial=initial_data)
         formset = InvoiceItemFormSet(instance=invoice)
-
+    
     return render(request, 'sales_app/invoice_form.html', {
         'form': form,
         'formset': formset,
@@ -1001,3 +964,37 @@ def toggle_payment_status(request, pk):
     if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
         return JsonResponse({'status': status})
     return redirect('sales_app:invoice_list')
+
+@login_required
+def delete_invoice_item(request, item_id):
+    """
+    حذف عنصر من الفاتورة مع إعادة الكمية للمنتج
+    """
+    if request.method == 'POST':
+        try:
+            # جلب عنصر الفاتورة
+            invoice_item = get_object_or_404(InvoiceItem, id=item_id)
+            
+            # استعادة الكمية للمنتج
+            product = invoice_item.product
+            product.quantity += invoice_item.quantity
+            product.save()
+
+            # حذف عنصر الفاتورة
+            invoice_item.delete()
+
+            return JsonResponse({
+                'success': True, 
+                'message': 'تم حذف العنصر بنجاح'
+            })
+
+        except Exception as e:
+            return JsonResponse({
+                'success': False, 
+                'error': str(e)
+            }, status=500)
+    
+    return JsonResponse({
+        'success': False, 
+        'error': 'طريقة الطلب غير صالحة'
+    }, status=400)

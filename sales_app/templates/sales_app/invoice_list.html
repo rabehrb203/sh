@@ -289,6 +289,9 @@
                                     </button>
                                 {% endif %}
                             </form>
+                            <a href="{% url 'sales_app:edit_invoice' invoice.id %}" class="btn btn-secondary">
+                                <i class="fas fa-edit"></i>
+                            </a>
                             <a href="{% url 'sales_app:invoice_detail' invoice.id %}" class="btn btn-view">
                                 <i class="fas fa-eye"></i>
                             </a>

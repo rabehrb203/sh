@@ -119,10 +119,24 @@
         margin: 0 5px;
         
     }
+.remove-cell{
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.remove-cell  input[type="checkbox"] {
+        margin-right: 5px;
+        display: none;
+    }
+   
 </style>
 <div class="container">
 <div class="card-body">
-    <h3 class="card-title mb-0">إنشاء فاتورة جديدة</h3>
+    {% if invoice %}
+        <h3 class="card-title mb-0">تعديل فاتورة رقم {{ invoice.id }}</h3>
+    {% else %}
+        <h3 class="card-title mb-0">إنشاء فاتورة جديدة</h3>
+    {% endif %}
     <div class="row">
         <div class="col-md-12">
             
@@ -156,11 +170,16 @@
 
                             <!-- Tax Exempt Field -->
                             <div class="form-check mb-3">
-                                <input type="checkbox" class="form-check-input" name="tax_exempt" id="id_tax_exempt" {% if invoice.tax_exempt %}checked{% endif %}>
-                                <label class="form-check-label" for="id_tax_exempt">
-                                    معفى من الضريبة
+                                {{ form.tax_exempt }}
+                                <label class="form-check-label" for="{{ form.tax_exempt.id_for_label }}">
+                                    {{ form.tax_exempt.label }}
                                 </label>
                             </div>
+                            {% if form.tax_exempt.errors %}
+                                <div class="text-danger">
+                                    {{ form.tax_exempt.errors }}
+                                </div>
+                            {% endif %}
                         </div>
 
                         <!-- Products Table -->
@@ -206,7 +225,7 @@
                                             {% endif %}
                                         </td>
                                         <td class="row-total">0.00</td>
-                                        <td>
+                                        <td class="remove-cell">
                                             <button type="button" class="btn btn-danger btn-sm remove-row">
                                                 <i class="fas fa-trash"></i>
                                             </button>
@@ -234,8 +253,8 @@
                                         <td class="text-end" id="subtotal">0.00 ₪</td>
                                     </tr>
                                     <tr id="tax-row" {% if invoice.tax_exempt %}style="display: none;"{% endif %}>
-                                        <th>ضريبة القيمة المضافة ({{ settings.tax_rate|default:"0" }}%):</th>
-                                        <td class="text-end" id="tax-amount">0.00 ₪</td>
+                                        <th id="tax-rate-display">ضريبة القيمة المضافة ({{ settings.tax_rate|default:"0" }}%):</th>
+                                        <td class="text-end" id="tax-amount-display">0.00 ₪</td>
                                     </tr>
                                     <tr>
                                         <th>المجموع النهائي:</th>
@@ -253,21 +272,36 @@
 
                         <div class="d-grid gap-2">
                             <div class="row">
+                                {% if not invoice %}
+                                    <div class="col-md-4">
+                                        <button type="submit" name="next_action" value="print" class="btn btn-info text-white w-100">
+                                            <i class="fas fa-print"></i> حفظ وطباعة
+                                        </button>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <button type="submit" name="next_action" value="new" class="btn btn-success w-100">
+                                            <i class="fas fa-plus"></i> حفظ وإنشاء جديدة
+                                        </button>
+                                    </div>
+                                {% endif %}
+                                {% if invoice %}
+                                <div>
+                                    <button type="submit" name="next_action" value="detail" class="btn btn-primary w-100">
+                                        <i class="fas fa-save"></i> 
+                                        حفظ التعديل
+                                    </button>
+                                </div>
+                               
+                                {% else %}
                                 <div class="col-md-4">
                                     <button type="submit" name="next_action" value="detail" class="btn btn-primary w-100">
-                                        <i class="fas fa-save"></i> حفظ الفاتورة
+                                        <i class="fas fa-save"></i> 
+                                        حفظ الفاتورة
                                     </button>
                                 </div>
-                                <div class="col-md-4">
-                                    <button type="submit" name="next_action" value="print" class="btn btn-info text-white w-100">
-                                        <i class="fas fa-print"></i> حفظ وطباعة
-                                    </button>
-                                </div>
-                                <div class="col-md-4">
-                                    <button type="submit" name="next_action" value="new" class="btn btn-success w-100">
-                                        <i class="fas fa-plus"></i> حفظ وإنشاء جديدة
-                                    </button>
-                                </div>
+                                   
+                                {% endif %}
+                                
                             </div>
                             <a href="{% url 'sales_app:invoice_list' %}" class="btn btn-secondary">
                                 <i class="fas fa-times"></i> إلغاء
@@ -291,7 +325,6 @@
 {% block extra_js %}
 <script>
     // تهيئة المتغيرات من Django
-    const TAX_RATE = Number("{{ settings.tax_rate|default:0 }}");
     const INITIAL_FORM_COUNT = parseInt("{{ formset.total_form_count }}");
     const MAX_FORM_COUNT = parseInt("{{ formset.max_num }}");
     let currentFormCount = INITIAL_FORM_COUNT;
@@ -300,26 +333,37 @@
     function initializeTaxExempt() {
         const taxExemptCheckbox = document.getElementById('id_tax_exempt');
         if (taxExemptCheckbox) {
-            // تحديث حالة الإعفاء من الضريبة عند تغيير الخانة
+            // Trigger initial state setup
+            const taxRow = document.getElementById('tax-row');
+            if (taxRow) {
+                taxRow.style.display = taxExemptCheckbox.checked ? 'none' : '';
+            }
+            
+            // Add change event listener
             taxExemptCheckbox.addEventListener('change', function() {
-                const taxRow = document.getElementById('tax-row');
                 if (taxRow) {
                     taxRow.style.display = this.checked ? 'none' : '';
                 }
                 updateTotals();
             });
             
-            // تحديث العرض الأولي
-            const taxRow = document.getElementById('tax-row');
-            if (taxRow) {
-                taxRow.style.display = taxExemptCheckbox.checked ? 'none' : '';
-            }
+            // Force update totals to reflect initial state
             updateTotals();
+        } else {
+            console.error('Tax exempt checkbox not found');
         }
     }
 
     // تحديث الإجماليات
     function updateTotals() {
+        const taxExemptCheckbox = document.getElementById('id_tax_exempt');
+        const taxRateDisplay = document.getElementById('tax-rate-display');
+        const taxAmountDisplay = document.getElementById('tax-amount-display');
+        const subtotalDisplay = document.getElementById('subtotal');
+        const totalDisplay = document.getElementById('total');
+        const taxRow = document.getElementById('tax-row');
+
+        // حساب المجموع الفرعي
         let subtotal = 0;
         document.querySelectorAll('.item-row').forEach(row => {
             const quantity = parseFloat(row.querySelector('input[name$="-quantity"]').value) || 0;
@@ -329,57 +373,61 @@
             subtotal += rowTotal;
         });
 
-        const taxExemptCheckbox = document.getElementById('id_tax_exempt');
+        // التحقق من حالة الإعفاء الضريبي
         const isTaxExempt = taxExemptCheckbox ? taxExemptCheckbox.checked : false;
         
-        document.getElementById('subtotal').textContent = subtotal.toFixed(2) + ' ₪';
-        
-        let taxAmount = 0;
-        if (!isTaxExempt) {
-            taxAmount = subtotal * (TAX_RATE / 100);
-        }
-        
+        // حساب الضريبة
+        const taxRate = {{ tax_rate }};
+        const taxAmount = isTaxExempt ? 0 : (subtotal * (taxRate / 100));
         const total = subtotal + taxAmount;
-        
-        document.getElementById('tax-amount').textContent = taxAmount.toFixed(2) + ' ₪';
-        document.getElementById('total').textContent = total.toFixed(2) + ' ₪';
+
+        // تحديث العرض
+        if (subtotalDisplay) subtotalDisplay.textContent = subtotal.toFixed(2) + ' ₪';
+        if (taxRateDisplay) taxRateDisplay.textContent = `ضريبة القيمة المضافة (${isTaxExempt ? '0' : taxRate}%):`;
+        if (taxAmountDisplay) taxAmountDisplay.textContent = taxAmount.toFixed(2) + ' ₪';
+        if (totalDisplay) totalDisplay.textContent = total.toFixed(2) + ' ₪';
+
+        // إخفاء/إظهار صف الضريبة
+        if (taxRow) {
+            taxRow.style.display = isTaxExempt ? 'none' : '';
+        }
 
         // تحديث الحقول المخفية
         updateHiddenFields(subtotal, taxAmount, total);
     }
 
-    // تحديث الحقول المخفية
     function updateHiddenFields(subtotal, taxAmount, total) {
-    let subtotalInput = document.getElementById('hidden_subtotal');
-    if (!subtotalInput) {
-        subtotalInput = document.createElement('input');
-        subtotalInput.type = 'hidden';
-        subtotalInput.name = 'subtotal';
-        subtotalInput.id = 'hidden_subtotal';
-        document.getElementById('invoice-form').appendChild(subtotalInput);
-    }
-    subtotalInput.value = subtotal.toFixed(2);
+        let subtotalInput = document.getElementById('hidden_subtotal');
+        if (!subtotalInput) {
+            subtotalInput = document.createElement('input');
+            subtotalInput.type = 'hidden';
+            subtotalInput.name = 'subtotal';
+            subtotalInput.id = 'hidden_subtotal';
+            document.getElementById('invoice-form').appendChild(subtotalInput);
+        }
+        subtotalInput.value = subtotal.toFixed(2);
 
-    let taxAmountInput = document.getElementById('hidden_tax_amount');
-    if (!taxAmountInput) {
-        taxAmountInput = document.createElement('input');
-        taxAmountInput.type = 'hidden';
-        taxAmountInput.name = 'tax_amount';
-        taxAmountInput.id = 'hidden_tax_amount';
-        document.getElementById('invoice-form').appendChild(taxAmountInput);
-    }
-    taxAmountInput.value = taxAmount.toFixed(2);
+        let taxAmountInput = document.getElementById('hidden_tax_amount');
+        if (!taxAmountInput) {
+            taxAmountInput = document.createElement('input');
+            taxAmountInput.type = 'hidden';
+            taxAmountInput.name = 'tax_amount';
+            taxAmountInput.id = 'hidden_tax_amount';
+            document.getElementById('invoice-form').appendChild(taxAmountInput);
+        }
+        taxAmountInput.value = taxAmount.toFixed(2);
 
-    let totalInput = document.getElementById('hidden_total');
-    if (!totalInput) {
-        totalInput = document.createElement('input');
-        totalInput.type = 'hidden';
-        totalInput.name = 'total';
-        totalInput.id = 'hidden_total';
-        document.getElementById('invoice-form').appendChild(totalInput);
+        let totalInput = document.getElementById('hidden_total');
+        if (!totalInput) {
+            totalInput = document.createElement('input');
+            totalInput.type = 'hidden';
+            totalInput.name = 'total';
+            totalInput.id = 'hidden_total';
+            document.getElementById('invoice-form').appendChild(totalInput);
+        }
+        totalInput.value = total.toFixed(2);
     }
-    totalInput.value = total.toFixed(2);
-}
+
     // إضافة مستمعي الأحداث للصفوف
     function addRowEventListeners(row) {
         const productSelect = row.querySelector('[name$="-product"]');
@@ -411,14 +459,16 @@
         
         if (removeButton && deleteCheckbox) {
             removeButton.addEventListener('click', function() {
-                const totalRows = document.querySelectorAll('.item-row:not([style*="display: none"])').length;
-                if (totalRows > 1) {
-                    deleteCheckbox.checked = true;
-                    row.style.display = 'none';
-                    updateTotals();
-                } else {
-                    alert('يجب أن تحتوي الفاتورة على منتج واحد على الأقل');
-                }
+                deleteCheckbox.checked = !deleteCheckbox.checked;
+                
+                // Update the button icon based on the new checkbox state
+                removeButton.innerHTML = deleteCheckbox.checked 
+                    ? '<i class="fas fa-check"></i>' 
+                    : '<i class="fas fa-trash"></i>';
+                
+            
+                updateFormIndexes();
+                updateTotals();
             });
         }
     }
@@ -427,19 +477,33 @@
     function updateFormIndexes() {
         const visibleRows = document.querySelectorAll('.item-row:not([style*="display: none"])');
         const totalFormsInput = document.getElementById('id_items-TOTAL_FORMS');
+        const initialFormsInput = document.getElementById('id_items-INITIAL_FORMS');
+        let index = 0;
         
-        visibleRows.forEach((row, index) => {
-            row.querySelectorAll('input, select').forEach(input => {
-                input.name = input.name.replace(/-\d+-/, `-${index}-`);
-                input.id = input.id.replace(/-\d+-/, `-${index}-`);
-            });
+        document.querySelectorAll('.item-row').forEach(row => {
+            if (!row.style.display || row.style.display !== 'none') {
+                row.querySelectorAll('input, select').forEach(input => {
+                    const oldName = input.name;
+                    const newName = oldName.replace(/-\d+-/, `-${index}-`);
+                    input.name = newName;
+                    input.id = input.id.replace(/-\d+-/, `-${index}-`);
+                });
+                index++;
+            }
         });
         
-        totalFormsInput.value = currentFormCount;
+        totalFormsInput.value = visibleRows.length;
+        if (initialFormsInput) {
+            initialFormsInput.value = Math.min(parseInt(initialFormsInput.value), visibleRows.length);
+        }
     }
 
     // إضافة مستمعي الأحداث عند تحميل الصفحة
     document.addEventListener('DOMContentLoaded', function() {
+        // Initialize TAX_RATE from the form's data attribute
+        const TAX_RATE = parseFloat(document.getElementById('invoice-form').dataset.taxRate) || 0;
+        window.TAX_RATE = TAX_RATE;  // Make it globally available
+        
         initializeTaxExempt();
         document.querySelectorAll('.item-row').forEach(addRowEventListeners);
     });
